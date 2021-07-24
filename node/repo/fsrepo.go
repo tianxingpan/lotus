@@ -39,6 +39,7 @@ const (
 	fsDatastore     = "datastore"
 	fsLock          = "repo.lock"
 	fsKeystore      = "keystore"
+	fsVersion       = "repo.version"
 )
 
 type RepoType int
@@ -66,6 +67,22 @@ func defConfForType(t RepoType) interface{} {
 	}
 }
 
+type RepoVersion string
+
+var LotusRepoVersion = RepoVersion("1")
+var LotusMinerRepoVersion = RepoVersion("1")
+
+func repoVersionForType(t RepoType) RepoVersion {
+	switch t {
+	case FullNode:
+		return LotusRepoVersion
+	case StorageMiner:
+		return LotusMinerRepoVersion
+	default:
+		panic(fmt.Sprintf("unknown RepoType(%d)", int(t)))
+	}
+}
+
 var log = logging.Logger("repo")
 
 var ErrRepoExists = xerrors.New("repo exists")
@@ -74,6 +91,23 @@ var ErrRepoExists = xerrors.New("repo exists")
 type FsRepo struct {
 	path       string
 	configPath string
+}
+
+func (fsr *FsRepo) Version() (RepoVersion, error) {
+	vp := filepath.Join(fsr.path, fsVersion)
+	vf, err := os.Open(vp)
+	if os.IsNotExist(err) {
+		return "", ErrNoVersion
+	} else if err != nil {
+		return "", err
+	}
+	defer vf.Close() // nolint:errcheck
+
+	version, err := ioutil.ReadAll(vf)
+	if err != nil {
+		return "", xerrors.Errorf("failed to read version file %p: %w", vf, err)
+	}
+	return RepoVersion(version), err
 }
 
 var _ Repo = &FsRepo{}
@@ -96,18 +130,47 @@ func (fsr *FsRepo) SetConfigPath(cfgPath string) {
 }
 
 func (fsr *FsRepo) Exists() (bool, error) {
-	_, err := os.Stat(filepath.Join(fsr.path, fsDatastore))
-	notexist := os.IsNotExist(err)
-	if notexist {
-		err = nil
-
-		_, err = os.Stat(filepath.Join(fsr.path, fsKeystore))
-		notexist = os.IsNotExist(err)
-		if notexist {
-			err = nil
-		}
+	dsAbsent, err := fsr.datastoreAbsent()
+	if err != nil {
+		return false, err
 	}
-	return !notexist, err
+	ksAbsent, err := fsr.keystoreAbsent()
+	if err != nil {
+		return false, err
+	}
+	vabsent, err := fsr.versionAbsent()
+	if err != nil {
+		return false, err
+	}
+	return !(dsAbsent && ksAbsent && vabsent), err
+}
+
+func (fsr *FsRepo) datastoreAbsent() (bool, error) {
+	_, err := os.Stat(filepath.Join(fsr.path, fsDatastore))
+	absent := os.IsNotExist(err)
+	if absent {
+		err = nil
+	}
+	return absent, err
+}
+
+func (fsr *FsRepo) keystoreAbsent() (bool, error) {
+	_, err := os.Stat(filepath.Join(fsr.path, fsKeystore))
+	absent := os.IsNotExist(err)
+	if absent {
+		err = nil
+	}
+	return absent, err
+}
+
+func (fsr *FsRepo) versionAbsent() (bool, error) {
+	_, err := os.Stat(filepath.Join(fsr.path, fsVersion))
+	absent := os.IsNotExist(err)
+	if absent {
+		err = nil
+	}
+	return absent, err
+
 }
 
 func (fsr *FsRepo) Init(t RepoType) error {
@@ -129,8 +192,15 @@ func (fsr *FsRepo) Init(t RepoType) error {
 		return xerrors.Errorf("init config: %w", err)
 	}
 
-	return fsr.initKeystore()
+	if err := fsr.initKeystore(); err != nil {
+		return xerrors.Errorf("init keystore: %w", err)
+	}
 
+	if err := fsr.initVersion(t); err != nil {
+		return xerrors.Errorf("init repo version: %w", err)
+	}
+
+	return nil
 }
 
 func (fsr *FsRepo) initConfig(t RepoType) error {
@@ -170,6 +240,27 @@ func (fsr *FsRepo) initKeystore() error {
 		return err
 	}
 	return os.Mkdir(kstorePath, 0700)
+}
+
+func (fsr *FsRepo) initVersion(t RepoType) error {
+	versionPath := filepath.Join(fsr.path, fsVersion)
+	if _, err := os.Stat(versionPath); err == nil {
+		return ErrRepoExists
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+
+	vf, err := os.Create(versionPath)
+	if err != nil {
+		return xerrors.Errorf("failed to create repo version file: %w", err)
+	}
+	defer vf.Close() // nolint:errcheck
+
+	rv := repoVersionForType(t)
+	if _, err := vf.WriteString(string(rv)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // APIEndpoint returns endpoint of API in this repo
@@ -270,6 +361,23 @@ type fsLockedRepo struct {
 
 	storageLk sync.Mutex
 	configLk  sync.Mutex
+}
+
+func (fsr *fsLockedRepo) Version() (RepoVersion, error) {
+	vp := filepath.Join(fsr.path, fsVersion)
+	vf, err := os.Open(vp)
+	if os.IsNotExist(err) {
+		return "", ErrNoVersion
+	} else if err != nil {
+		return "", err
+	}
+	defer vf.Close() // nolint:errcheck
+
+	version, err := ioutil.ReadAll(vf)
+	if err != nil {
+		return "", xerrors.Errorf("failed to read version file %p: %w", vf, err)
+	}
+	return RepoVersion(version), err
 }
 
 func (fsr *fsLockedRepo) Readonly() bool {
