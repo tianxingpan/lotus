@@ -149,6 +149,12 @@ type SplitStore struct {
 
 	// registered protectors
 	protectors []func(func(cid.Cid) error) error
+
+	// background cold object reification
+	reifyMx         sync.Mutex
+	reifyCond       sync.Cond
+	reifyPend       map[cid.Cid]struct{}
+	reifyInProgress map[cid.Cid]struct{}
 }
 
 var _ bstore.Blockstore = (*SplitStore)(nil)
@@ -187,6 +193,9 @@ func Open(path string, ds dstore.Datastore, hot, cold bstore.Blockstore, cfg *Co
 	}
 
 	ss.txnViewsCond.L = &ss.txnViewsMx
+	ss.reifyCond.L = &ss.reifyMx
+	ss.reifyPend = make(map[cid.Cid]struct{})
+	ss.reifyInProgress = make(map[cid.Cid]struct{})
 	ss.ctx, ss.cancel = context.WithCancel(context.Background())
 
 	if enableDebugLog {
@@ -211,6 +220,10 @@ func (s *SplitStore) DeleteMany(_ []cid.Cid) error {
 }
 
 func (s *SplitStore) Has(cid cid.Cid) (bool, error) {
+	return s.iHas(cid, false)
+}
+
+func (s *SplitStore) iHas(cid cid.Cid, reify bool) (bool, error) {
 	if isIdentiyCid(cid) {
 		return true, nil
 	}
@@ -229,10 +242,24 @@ func (s *SplitStore) Has(cid cid.Cid) (bool, error) {
 		return true, nil
 	}
 
-	return s.cold.Has(cid)
+	if !reify {
+		return s.cold.Has(cid)
+	}
+
+	has, err = s.cold.Has(cid)
+	if has && err != nil {
+		s.reifyColdObject(cid)
+		s.trackTxnRef(cid)
+	}
+
+	return has, err
 }
 
 func (s *SplitStore) Get(cid cid.Cid) (blocks.Block, error) {
+	return s.iGet(cid, false)
+}
+
+func (s *SplitStore) iGet(cid cid.Cid, reify bool) (blocks.Block, error) {
 	if isIdentiyCid(cid) {
 		data, err := decodeIdentityCid(cid)
 		if err != nil {
@@ -260,7 +287,10 @@ func (s *SplitStore) Get(cid cid.Cid) (blocks.Block, error) {
 		blk, err = s.cold.Get(cid)
 		if err == nil {
 			stats.Record(s.ctx, metrics.SplitstoreMiss.M(1))
-
+			if reify {
+				s.reifyColdObject(cid)
+				s.trackTxnRef(cid)
+			}
 		}
 		return blk, err
 
@@ -270,6 +300,10 @@ func (s *SplitStore) Get(cid cid.Cid) (blocks.Block, error) {
 }
 
 func (s *SplitStore) GetSize(cid cid.Cid) (int, error) {
+	return s.iGetSize(cid, false)
+}
+
+func (s *SplitStore) iGetSize(cid cid.Cid, reify bool) (int, error) {
 	if isIdentiyCid(cid) {
 		data, err := decodeIdentityCid(cid)
 		if err != nil {
@@ -297,6 +331,10 @@ func (s *SplitStore) GetSize(cid cid.Cid) (int, error) {
 		size, err = s.cold.GetSize(cid)
 		if err == nil {
 			stats.Record(s.ctx, metrics.SplitstoreMiss.M(1))
+			if reify {
+				s.reifyColdObject(cid)
+				s.trackTxnRef(cid)
+			}
 		}
 		return size, err
 
@@ -415,6 +453,10 @@ func (s *SplitStore) HashOnRead(enabled bool) {
 }
 
 func (s *SplitStore) View(cid cid.Cid, cb func([]byte) error) error {
+	return s.iView(cid, false, cb)
+}
+
+func (s *SplitStore) iView(cid cid.Cid, reify bool, cb func([]byte) error) error {
 	if isIdentiyCid(cid) {
 		data, err := decodeIdentityCid(cid)
 		if err != nil {
@@ -445,6 +487,10 @@ func (s *SplitStore) View(cid cid.Cid, cb func([]byte) error) error {
 		err = s.cold.View(cid, cb)
 		if err == nil {
 			stats.Record(s.ctx, metrics.SplitstoreMiss.M(1))
+			if reify {
+				s.reifyColdObject(cid)
+				s.trackTxnRef(cid)
+			}
 		}
 		return err
 
@@ -536,6 +582,9 @@ func (s *SplitStore) Start(chain ChainAccessor) error {
 		}
 	}
 
+	// spawn the reifier
+	go s.reifyOrchestrator()
+
 	// watch the chain
 	chain.SubscribeHeadChanges(s.HeadChange)
 
@@ -562,6 +611,7 @@ func (s *SplitStore) Close() error {
 		}
 	}
 
+	s.reifyCond.Broadcast()
 	s.cancel()
 	return multierr.Combine(s.markSetEnv.Close(), s.debug.Close())
 }
