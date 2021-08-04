@@ -13,6 +13,7 @@ import (
 	"github.com/filecoin-project/lotus/node/repo"
 )
 
+// 管理RPC权限
 var AuthCmd = &cli.Command{
 	Name:  "auth",
 	Usage: "Manage RPC permissions",
@@ -22,6 +23,7 @@ var AuthCmd = &cli.Command{
 	},
 }
 
+// 子命令：生成token
 var AuthCreateAdminToken = &cli.Command{
 	Name:  "create-token",
 	Usage: "Create token",
@@ -70,6 +72,7 @@ var AuthCreateAdminToken = &cli.Command{
 	},
 }
 
+// 子命令：获取连接到此节点所需的带有API信息的令牌
 var AuthApiInfoToken = &cli.Command{
 	Name:  "api-info",
 	Usage: "Get token with API info required to connect to this node",

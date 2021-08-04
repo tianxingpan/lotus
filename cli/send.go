@@ -18,6 +18,7 @@ var sendCmd = &cli.Command{
 	Name:      "send",
 	Usage:     "Send funds between accounts",
 	ArgsUsage: "[targetAddress] [amount]",
+	// Flags:定义命令中的参数
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "from",
@@ -90,6 +91,7 @@ var sendCmd = &cli.Command{
 		}
 		params.Val = abi.TokenAmount(val)
 
+		// fil发送地址
 		if from := cctx.String("from"); from != "" {
 			addr, err := address.NewFromString(from)
 			if err != nil {
@@ -99,6 +101,7 @@ var sendCmd = &cli.Command{
 			params.From = addr
 		}
 
+		// 从参数中获取gas-premium
 		if cctx.IsSet("gas-premium") {
 			gp, err := types.BigFromString(cctx.String("gas-premium"))
 			if err != nil {
@@ -107,6 +110,7 @@ var sendCmd = &cli.Command{
 			params.GasPremium = &gp
 		}
 
+		// 从参数中获取gas-feecap
 		if cctx.IsSet("gas-feecap") {
 			gfc, err := types.BigFromString(cctx.String("gas-feecap"))
 			if err != nil {
@@ -120,6 +124,7 @@ var sendCmd = &cli.Command{
 			params.GasLimit = &limit
 		}
 
+		// 方法类型，这里的值为0，即send类型消息
 		params.Method = abi.MethodNum(cctx.Uint64("method"))
 
 		if cctx.IsSet("params-json") {
@@ -141,15 +146,18 @@ var sendCmd = &cli.Command{
 		}
 
 		if cctx.IsSet("nonce") {
+			// 如果设置nonce执行此处代码
 			n := cctx.Uint64("nonce")
 			params.Nonce = &n
 		}
 
+		// WalletSignMessage：对给定的消息即msg变量进行签名
 		proto, err := srv.MessageForSend(ctx, params)
 		if err != nil {
 			return xerrors.Errorf("creating message prototype: %w", err)
 		}
 
+		// 交互式发送
 		sm, err := InteractiveSend(ctx, cctx, srv, proto)
 		if err != nil {
 			return err
