@@ -40,6 +40,7 @@ import (
 	types "github.com/filecoin-project/lotus/chain/types"
 )
 
+// 命令：与filecoin区块链互动
 var ChainCmd = &cli.Command{
 	Name:  "chain",
 	Usage: "Interact with filecoin blockchain",
@@ -64,6 +65,7 @@ var ChainCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印区块链头
 var ChainHeadCmd = &cli.Command{
 	Name:  "head",
 	Usage: "Print chain head",
@@ -87,6 +89,7 @@ var ChainHeadCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取一个区块并打印其详情
 var ChainGetBlock = &cli.Command{
 	Name:      "getblock",
 	Usage:     "Get a block and print its details",
@@ -178,6 +181,7 @@ func apiMsgCids(in []lapi.Message) []cid.Cid {
 	return out
 }
 
+// 子命令：读取对象的原始字节
 var ChainReadObjCmd = &cli.Command{
 	Name:      "read-obj",
 	Usage:     "Read the raw bytes of an object",
@@ -205,6 +209,8 @@ var ChainReadObjCmd = &cli.Command{
 	},
 }
 
+// 子命令：从区块链中删除对象
+// 警告：从区块链中删除错误的对象可能会导致同步问题
 var ChainDeleteObjCmd = &cli.Command{
 	Name:        "delete-obj",
 	Usage:       "Delete an object from the chain blockstore",
@@ -242,6 +248,8 @@ var ChainDeleteObjCmd = &cli.Command{
 	},
 }
 
+// 子命令：收集对象的大小和ipld链接计数
+//当一个基地被提供时，它将首先被移动，并且所有链接都会被访问 将在传入对象漫游时忽略。
 var ChainStatObjCmd = &cli.Command{
 	Name:      "stat-obj",
 	Usage:     "Collect size and ipld link counts for objs",
@@ -289,6 +297,7 @@ var ChainStatObjCmd = &cli.Command{
 	},
 }
 
+// 子命令：通过其cid获取并打印消息
 var ChainGetMsgCmd = &cli.Command{
 	Name:      "getmessage",
 	Usage:     "Get and print a message by its cid",
@@ -337,6 +346,7 @@ var ChainGetMsgCmd = &cli.Command{
 	},
 }
 
+// 子命令：手动设置本地节点头tipset（注意：通常仅用于恢复）
 var ChainSetHeadCmd = &cli.Command{
 	Name:      "sethead",
 	Usage:     "manually set the local nodes head tipset (Caution: normally only used for recovery)",
@@ -386,6 +396,7 @@ var ChainSetHeadCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查给定tipset的块空间使用情况
 var ChainInspectUsage = &cli.Command{
 	Name:  "inspect-usage",
 	Usage: "Inspect block space usage of a given tipset",
@@ -531,6 +542,7 @@ var ChainInspectUsage = &cli.Command{
 	},
 }
 
+// 子命令：查看链的段落信息
 var ChainListCmd = &cli.Command{
 	Name:    "list",
 	Aliases: []string{"love"},
@@ -660,6 +672,7 @@ var ChainListCmd = &cli.Command{
 	},
 }
 
+// 子命令：按路径获取链DAG节点
 var ChainGetCmd = &cli.Command{
 	Name:      "get",
 	Usage:     "Get chain DAG node by path",
@@ -901,6 +914,21 @@ func printTipSet(format string, ts *types.TipSet) {
 	fmt.Println(format)
 }
 
+// 子命令：事件的二等分链
+/*
+将链状态树一分为二：
+
+   莲花链平分 [最小高度] [最大高度] '1/2/3/state/path' 'shell 命令' 'args'
+
+   返回条件为真的第一个提示集
+                  v
+   [开始] FFFFFFFTTT [结束]
+
+   示例：查找交易 ID 100 000 出现的高度
+    - 莲花链二等分 1 32000 '@Ha:t03/1' jq -e '.[2] > 100000'
+
+   有关特殊路径元素，请参阅“chain get”帮助
+*/
 var ChainBisectCmd = &cli.Command{
 	Name:      "bisect",
 	Usage:     "bisect chain for an event",
@@ -1024,6 +1052,7 @@ var ChainBisectCmd = &cli.Command{
 	},
 }
 
+// 子命令：将链导出到car文件
 var ChainExportCmd = &cli.Command{
 	Name:      "export",
 	Usage:     "export chain to a car file",
@@ -1104,6 +1133,7 @@ var ChainExportCmd = &cli.Command{
 	},
 }
 
+// 子命令：报告一致性错误
 var SlashConsensusFault = &cli.Command{
 	Name:      "slash-consensus",
 	Usage:     "Report consensus fault",
@@ -1229,6 +1259,7 @@ var SlashConsensusFault = &cli.Command{
 	},
 }
 
+// 子命令：估算Gas价格
 var ChainGasPriceCmd = &cli.Command{
 	Name:  "gas-price",
 	Usage: "Estimate gas prices",
@@ -1256,6 +1287,7 @@ var ChainGasPriceCmd = &cli.Command{
 	},
 }
 
+// 子命令：解码各种类型
 var ChainDecodeCmd = &cli.Command{
 	Name:  "decode",
 	Usage: "decode various types",
@@ -1264,6 +1296,7 @@ var ChainDecodeCmd = &cli.Command{
 	},
 }
 
+// 子命令：解码消息参数
 var chainDecodeParamsCmd = &cli.Command{
 	Name:      "params",
 	Usage:     "Decode message params",
@@ -1336,6 +1369,7 @@ var chainDecodeParamsCmd = &cli.Command{
 	},
 }
 
+// 子命令：对各种类型进行编码
 var ChainEncodeCmd = &cli.Command{
 	Name:  "encode",
 	Usage: "encode various types",
@@ -1344,6 +1378,7 @@ var ChainEncodeCmd = &cli.Command{
 	},
 }
 
+// 子命令：对给定的JSON参数进行编码
 var chainEncodeParamsCmd = &cli.Command{
 	Name:      "params",
 	Usage:     "Encodes the given JSON params",

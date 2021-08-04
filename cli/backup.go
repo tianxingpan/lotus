@@ -22,6 +22,7 @@ type BackupAPI interface {
 
 type BackupApiFn func(ctx *cli.Context) (BackupAPI, jsonrpc.ClientCloser, error)
 
+// 节点元数据备份
 func BackupCmd(repoFlag string, rt repo.RepoType, getApi BackupApiFn) *cli.Command {
 	var offlineBackup = func(cctx *cli.Context) error {
 		logging.SetLogLevel("badger", "ERROR") // nolint:errcheck

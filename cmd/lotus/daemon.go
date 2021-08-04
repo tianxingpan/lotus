@@ -153,7 +153,7 @@ var DaemonCmd = &cli.Command{
 			Name:  "restore-config",
 			Usage: "config file to use when restoring from backup",
 		},
-	},
+	},	// 定义daemon命令启动参数。
 	Action: func(cctx *cli.Context) error {
 		isLite := cctx.Bool("lite")
 
@@ -216,6 +216,7 @@ var DaemonCmd = &cli.Command{
 			}
 		}
 
+		// 创建FsRepo,即lotus的Repo
 		r, err := repo.NewFS(cctx.String("repo"))
 		if err != nil {
 			return xerrors.Errorf("opening fs repo: %w", err)
@@ -225,6 +226,7 @@ var DaemonCmd = &cli.Command{
 			r.SetConfigPath(cctx.String("config"))
 		}
 
+		// 初始化Repo,例如创建初始文件等
 		err = r.Init(repo.FullNode)
 		if err != nil && err != repo.ErrRepoExists {
 			return xerrors.Errorf("repo init error: %w", err)
@@ -232,6 +234,7 @@ var DaemonCmd = &cli.Command{
 		freshRepo := err != repo.ErrRepoExists
 
 		if !isLite {
+			// 获取参数文件
 			if err := paramfetch.GetParams(lcli.ReqContext(cctx), build.ParametersJSON(), build.SrsJSON(), 0); err != nil {
 				return xerrors.Errorf("fetching proof parameters: %w", err)
 			}
@@ -277,6 +280,7 @@ var DaemonCmd = &cli.Command{
 			}
 		}
 
+		// 如果是Genesis启动方式,则加载Genesis文件
 		genesis := node.Options()
 		if len(genBytes) > 0 {
 			genesis = node.Override(new(modules.Genesis), modules.LoadGenesis(genBytes))
@@ -310,9 +314,10 @@ var DaemonCmd = &cli.Command{
 			log.Warnf("unable to inject prometheus ipfs/go-metrics exporter; some metrics will be unavailable; err: %s", err)
 		}
 
+		// 创建全节点, 从第二个参数起都是Option
 		var api api.FullNode
 		stop, err := node.New(ctx,
-			node.FullAPI(&api, node.Lite(isLite)),
+			node.FullAPI(&api, node.Lite(isLite)),	// 上线, 多数初始化逻辑在此实现
 
 			node.Base(),
 			node.Repo(r),
@@ -347,6 +352,7 @@ var DaemonCmd = &cli.Command{
 			}
 		}
 
+		// 根据repo内的配置创建APIEndpoint, 即网络监听对象
 		endpoint, err := r.APIEndpoint()
 		if err != nil {
 			return xerrors.Errorf("getting api endpoint: %w", err)
@@ -368,6 +374,7 @@ var DaemonCmd = &cli.Command{
 			return fmt.Errorf("failed to instantiate rpc handler: %s", err)
 		}
 
+		// 启动RPC服务
 		// Serve the RPC.
 		rpcStopper, err := node.ServeRPC(h, "lotus-daemon", endpoint)
 		if err != nil {
@@ -382,6 +389,7 @@ var DaemonCmd = &cli.Command{
 		<-finishCh // fires when shutdown is complete.
 
 		// TODO: properly parse api endpoint (or make it a URL)
+		// 正确解析api端点（或使其成为URL）
 		return nil
 	},
 	Subcommands: []*cli.Command{
