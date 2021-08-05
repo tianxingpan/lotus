@@ -58,6 +58,7 @@ var CidBaseFlag = cli.StringFlag{
 
 // GetCidEncoder returns an encoder using the `cid-base` flag if provided, or
 // the default (Base32) encoder if not.
+//GetCidEncoder 使用 `cid-base` 标志（如果提供）或默认（Base32）编码器（如果没有）返回编码器
 func GetCidEncoder(cctx *cli.Context) (cidenc.Encoder, error) {
 	val := cctx.String("cid-base")
 
@@ -74,6 +75,7 @@ func GetCidEncoder(cctx *cli.Context) (cidenc.Encoder, error) {
 	return e, nil
 }
 
+// 命令：客户端命令，进行交易、存储数据、检索数据
 var clientCmd = &cli.Command{
 	Name:  "client",
 	Usage: "Make deals, store data, retrieve data",
@@ -102,6 +104,7 @@ var clientCmd = &cli.Command{
 	},
 }
 
+// 子命令：导入数据
 var clientImportCmd = &cli.Command{
 	Name:      "import",
 	Usage:     "Import data",
@@ -109,7 +112,7 @@ var clientImportCmd = &cli.Command{
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "car",
-			Usage: "import from a car file instead of a regular file",
+			Usage: "import from a car file instead of a regular file", // 从car文件而不是常规文件导入
 		},
 		&cli.BoolFlag{
 			Name:    "quiet",
@@ -158,6 +161,7 @@ var clientImportCmd = &cli.Command{
 	},
 }
 
+// 子命令：删除导入
 var clientDropCmd = &cli.Command{
 	Name:      "drop",
 	Usage:     "Remove import",
@@ -194,6 +198,7 @@ var clientDropCmd = &cli.Command{
 	},
 }
 
+// 子命令：计算CAR文件的片段cid（commP）
 var clientCommPCmd = &cli.Command{
 	Name:      "commP",
 	Usage:     "Calculate the piece-cid (commP) of a CAR file",
@@ -229,6 +234,7 @@ var clientCommPCmd = &cli.Command{
 	},
 }
 
+// 子命令：根据输入生成car文件
 var clientCarGenCmd = &cli.Command{
 	Name:      "generate-car",
 	Usage:     "Generate a car file from input",
@@ -259,6 +265,7 @@ var clientCarGenCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出本地导入的数据
 var clientLocalCmd = &cli.Command{
 	Name:  "local",
 	Usage: "List locally imported data",
@@ -302,6 +309,7 @@ var clientLocalCmd = &cli.Command{
 	},
 }
 
+// 子命令：初始化与矿工的存储交易
 var clientDealCmd = &cli.Command{
 	Name:  "deal",
 	Usage: "Initialize storage deal with a miner",
@@ -503,6 +511,7 @@ The minimum value is 518400 (6 months).`,
 	},
 }
 
+// 交易互动
 func interactiveDeal(cctx *cli.Context) error {
 	api, closer, err := GetFullNodeAPI(cctx)
 	if err != nil {
@@ -961,6 +970,7 @@ uiLoop:
 	}
 }
 
+// 子命令：在网络中查找数据
 var clientFindCmd = &cli.Command{
 	Name:      "find",
 	Usage:     "Find data in the network",
@@ -1026,8 +1036,10 @@ var clientFindCmd = &cli.Command{
 	},
 }
 
+// 默认最大检索价格
 const DefaultMaxRetrievePrice = "0.01"
 
+// 子命令：从网络检索数据
 var clientRetrieveCmd = &cli.Command{
 	Name:      "retrieve",
 	Usage:     "Retrieve data from network",
@@ -1221,6 +1233,7 @@ var clientRetrieveCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出检索市场交易
 var clientListRetrievalsCmd = &cli.Command{
 	Name:  "list-retrievals",
 	Usage: "List retrieval market deals",
@@ -1311,10 +1324,14 @@ var clientListRetrievalsCmd = &cli.Command{
 	},
 }
 
+// 是否终端错误
 func isTerminalError(status retrievalmarket.DealStatus) bool {
 	// should patch this in go-fil-markets but to solve the problem immediate and not have buggy output
+	// 应该在 go-fil-markets 中修补这个，但要立即解决问题并且没有错误的输出
 	return retrievalmarket.IsTerminalError(status) || status == retrievalmarket.DealStatusErrored || status == retrievalmarket.DealStatusCancelled
 }
+
+// 输出检索交易
 func outputRetrievalDeals(ctx context.Context, out io.Writer, localDeals []lapi.RetrievalInfo, verbose bool, showFailed bool, completed bool) error {
 	var deals []api.RetrievalInfo
 	for _, deal := range localDeals {
@@ -1357,6 +1374,7 @@ func outputRetrievalDeals(ctx context.Context, out io.Writer, localDeals []lapi.
 	return w.Flush(out)
 }
 
+// 检索输出
 func toRetrievalOutput(d api.RetrievalInfo, verbose bool) map[string]interface{} {
 
 	payloadCID := d.PayloadCID.String()
@@ -1400,6 +1418,7 @@ func toRetrievalOutput(d api.RetrievalInfo, verbose bool) map[string]interface{}
 	return retrievalOutput
 }
 
+// 检索状态字符串
 func retrievalStatusString(status retrievalmarket.DealStatus) string {
 	s := retrievalmarket.DealStatuses[status]
 
@@ -1413,6 +1432,7 @@ func retrievalStatusString(status retrievalmarket.DealStatus) string {
 	}
 }
 
+// 子命令：检查有关交易生命周期及其经历的各个阶段的详细信息
 var clientInspectDealCmd = &cli.Command{
 	Name:  "inspect-deal",
 	Usage: "Inspect detailed information about deal's lifecycle and the various stages it goes through",
@@ -1436,6 +1456,7 @@ var clientInspectDealCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印有关本地存储交易的统计信息
 var clientDealStatsCmd = &cli.Command{
 	Name:  "deal-stats",
 	Usage: "Print statistics about local storage deals",
@@ -1510,6 +1531,7 @@ var clientDealStatsCmd = &cli.Command{
 	},
 }
 
+// 子命令：对顶级矿工的列表询问
 var clientListAsksCmd = &cli.Command{
 	Name:  "list-asks",
 	Usage: "List asks for top miners",
@@ -1564,11 +1586,13 @@ var clientListAsksCmd = &cli.Command{
 	},
 }
 
+// 询问
 type QueriedAsk struct {
 	Ask  *storagemarket.StorageAsk
 	Ping time.Duration
 }
 
+// 获取询问
 func GetAsks(ctx context.Context, api v0api.FullNode) ([]QueriedAsk, error) {
 	isTTY := true
 	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) == 0 {
@@ -1710,6 +1734,7 @@ loop2:
 	return asks, nil
 }
 
+// 子命令：找一个矿工询问
 var clientQueryAskCmd = &cli.Command{
 	Name:      "query-ask",
 	Usage:     "Find a miners ask",
@@ -1795,6 +1820,7 @@ var clientQueryAskCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出存储市场交易
 var clientListDeals = &cli.Command{
 	Name:  "list-deals",
 	Usage: "List storage market deals",
@@ -1815,7 +1841,7 @@ var clientListDeals = &cli.Command{
 		},
 		&cli.BoolFlag{
 			Name:  "watch",
-			Usage: "watch deal updates in real-time, rather than a one time list",
+			Usage: "watch deal updates in real-time, rather than a one time list",  // 实时查看交易更新，而不是一次性列表
 		},
 	},
 	Action: func(cctx *cli.Context) error {
@@ -1879,6 +1905,7 @@ var clientListDeals = &cli.Command{
 	},
 }
 
+// 交易信息中的交易
 func dealFromDealInfo(ctx context.Context, full v0api.FullNode, head *types.TipSet, v api.DealInfo) deal {
 	if v.DealID == 0 {
 		return deal{
@@ -1898,11 +1925,14 @@ func dealFromDealInfo(ctx context.Context, full v0api.FullNode, head *types.TipS
 	}
 }
 
+// 输出存储交易
 func outputStorageDeals(ctx context.Context, out io.Writer, full v0api.FullNode, localDeals []lapi.DealInfo, verbose bool, showFailed bool) error {
+	// struct切片快排
 	sort.Slice(localDeals, func(i, j int) bool {
 		return localDeals[i].CreationTime.Before(localDeals[j].CreationTime)
 	})
 
+	// 查看块的头部信息
 	head, err := full.ChainHead(ctx)
 	if err != nil {
 		return err
@@ -2014,6 +2044,7 @@ func outputStorageDeals(ctx context.Context, out io.Writer, full v0api.FullNode,
 	return w.Flush(out)
 }
 
+// 交易状态字符串
 func dealStateString(state storagemarket.StorageDealStatus) string {
 	s := storagemarket.DealStates[state]
 	switch state {
@@ -2031,6 +2062,7 @@ type deal struct {
 	OnChainDealState market.DealState
 }
 
+// 子命令：打印详细的交易信息
 var clientGetDealCmd = &cli.Command{
 	Name:  "get-deal",
 	Usage: "Print detailed deal information",
@@ -2078,6 +2110,7 @@ var clientGetDealCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印存储市场客户余额
 var clientBalancesCmd = &cli.Command{
 	Name:  "balances",
 	Usage: "Print storage market client balances",
@@ -2137,6 +2170,7 @@ var clientBalancesCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印本地存储文件的相关信息（工件尺寸等）
 var clientStat = &cli.Command{
 	Name:      "stat",
 	Usage:     "Print information about a locally stored file (piece size, etc)",
@@ -2170,6 +2204,7 @@ var clientStat = &cli.Command{
 	},
 }
 
+// 子命令：强制重新启动暂停的数据传输
 var clientRestartTransfer = &cli.Command{
 	Name:  "restart-transfer",
 	Usage: "Force restart a stalled data transfer",
@@ -2230,6 +2265,7 @@ var clientRestartTransfer = &cli.Command{
 	},
 }
 
+// 子命令：强制取消数据传输
 var clientCancelTransfer = &cli.Command{
 	Name:  "cancel-transfer",
 	Usage: "Force cancel a data transfer",
@@ -2297,6 +2333,7 @@ var clientCancelTransfer = &cli.Command{
 	},
 }
 
+// 子命令：按交易ID取消检索交易；这也会取消关联的传输
 var clientCancelRetrievalDealCmd = &cli.Command{
 	Name:  "cancel-retrieval",
 	Usage: "Cancel a retrieval deal by deal ID; this also cancels the associated transfer",
@@ -2324,6 +2361,7 @@ var clientCancelRetrievalDealCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出正在进行的交易数据传输
 var clientListTransfers = &cli.Command{
 	Name:  "list-transfers",
 	Usage: "List ongoing data transfers for deals",
@@ -2414,6 +2452,7 @@ var clientListTransfers = &cli.Command{
 }
 
 // OutputDataTransferChannels generates table output for a list of channels
+// OutputDataTransferChannels为通道列表生成表输出
 func OutputDataTransferChannels(out io.Writer, channels []lapi.DataTransferChannel, verbose, completed, showFailed bool) {
 	sort.Slice(channels, func(i, j int) bool {
 		return channels[i].TransferID < channels[j].TransferID
@@ -2463,6 +2502,7 @@ func OutputDataTransferChannels(out io.Writer, channels []lapi.DataTransferChann
 	w.Flush(out) //nolint:errcheck
 }
 
+// 通道状态字符串
 func channelStatusString(status datatransfer.Status) string {
 	s := datatransfer.Statuses[status]
 	switch status {
@@ -2475,6 +2515,7 @@ func channelStatusString(status datatransfer.Status) string {
 	}
 }
 
+// 通道输出
 func toChannelOutput(otherPartyColumn string, channel lapi.DataTransferChannel, verbose bool) map[string]interface{} {
 	rootCid := channel.BaseCID.String()
 	otherParty := channel.OtherPeer.String()
@@ -2505,6 +2546,7 @@ func toChannelOutput(otherPartyColumn string, channel lapi.DataTransferChannel, 
 	}
 }
 
+// 字符串长度超出部分省略符替换
 func ellipsis(s string, length int) string {
 	if length > 0 && len(s) > length {
 		return "..." + s[len(s)-length:]
@@ -2512,6 +2554,7 @@ func ellipsis(s string, length int) string {
 	return s
 }
 
+// 检查交易指令
 func inspectDealCmd(ctx context.Context, api v0api.FullNode, proposalCid string, dealId int) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -2555,6 +2598,7 @@ func inspectDealCmd(ctx context.Context, api v0api.FullNode, proposalCid string,
 	return nil
 }
 
+// 成交/渲染交易
 func renderDeal(di *lapi.DealInfo) {
 	color.Blue("Deal ID:      %d\n", int(di.DealID))
 	color.Blue("Proposal CID: %s\n\n", di.ProposalCid.String())
