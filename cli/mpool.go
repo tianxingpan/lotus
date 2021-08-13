@@ -22,6 +22,7 @@ import (
 	"github.com/filecoin-project/lotus/node/config"
 )
 
+// 命令：管理消息池
 var MpoolCmd = &cli.Command{
 	Name:  "mpool",
 	Usage: "Manage message pool",
@@ -38,6 +39,7 @@ var MpoolCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取待处理消息
 var MpoolPending = &cli.Command{
 	Name:  "pending",
 	Usage: "Get pending messages",
@@ -134,6 +136,8 @@ var MpoolPending = &cli.Command{
 }
 
 // Deprecated: MpoolClear is now available at `lotus-shed mpool clear`
+// 已弃用：MpoolClear 现在可在 `lotus-shed mpool clear` 获得
+// 子命令：清除 mpool 中的所有待处理消息（谨慎使用）（已弃用）
 var MpoolClear = &cli.Command{
 	Name:   "clear",
 	Usage:  "Clear all pending messages from the mpool (USE WITH CARE) (DEPRECATED)",
@@ -169,6 +173,7 @@ var MpoolClear = &cli.Command{
 	},
 }
 
+// 子命令：订阅mpool更改
 var MpoolSub = &cli.Command{
 	Name:  "sub",
 	Usage: "Subscribe to mpool changes",
@@ -201,6 +206,7 @@ var MpoolSub = &cli.Command{
 	},
 }
 
+// 子命令：打印内存池统计信息
 var MpoolStat = &cli.Command{
 	Name:  "stat",
 	Usage: "print mempool stats",
@@ -360,6 +366,7 @@ var MpoolStat = &cli.Command{
 	},
 }
 
+// 子命令：替换内存池中的消息
 var MpoolReplaceCmd = &cli.Command{
 	Name:  "replace",
 	Usage: "replace a message in the mempool",
@@ -513,6 +520,7 @@ var MpoolReplaceCmd = &cli.Command{
 	},
 }
 
+// 子命令：在内存池中查找消息
 var MpoolFindCmd = &cli.Command{
 	Name:  "find",
 	Usage: "find a message in the mempool",
@@ -596,6 +604,7 @@ var MpoolFindCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取或设置当前的 mpool 配置
 var MpoolConfig = &cli.Command{
 	Name:      "config",
 	Usage:     "get or set current mpool configuration",
@@ -641,6 +650,7 @@ var MpoolConfig = &cli.Command{
 	},
 }
 
+// 子命令：检查内存池中消息的gas性能
 var MpoolGasPerfCmd = &cli.Command{
 	Name:  "gas-perf",
 	Usage: "Check gas performance of messages in mempool",

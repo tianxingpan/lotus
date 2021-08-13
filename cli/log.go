@@ -7,6 +7,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// 命令：管理日志
 var LogCmd = &cli.Command{
 	Name:  "log",
 	Usage: "Manage logging",
@@ -16,6 +17,7 @@ var LogCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出日志系统
 var LogList = &cli.Command{
 	Name:  "list",
 	Usage: "List log systems",
@@ -41,6 +43,7 @@ var LogList = &cli.Command{
 	},
 }
 
+// 子命令：设置日志等级
 var LogSetLevel = &cli.Command{
 	Name:      "set-level",
 	Usage:     "Set log level",

@@ -18,6 +18,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// 命令：mpool管理
 var mpoolManage = &cli.Command{
 	Name: "manage",
 	Action: func(cctx *cli.Context) error {
@@ -82,6 +83,7 @@ type mmUI struct {
 	messages []*types.SignedMessage
 }
 
+// 地址选择
 func (mm *mmUI) addrSelect() func(*imtui.Tui) error {
 	rows := [][]string{{"Address", "No. Messages"}}
 	mCount := map[address.Address]int{}
@@ -141,6 +143,7 @@ func (mi *msgInfo) Row() []string {
 
 }
 
+// 消息列表
 func (mm *mmUI) messageLising(a address.Address) func(*imtui.Tui) error {
 	genMsgInfos := func() ([]msgInfo, error) {
 		msgs, err := mm.srv.MpoolPendingFilter(mm.ctx, func(sm *types.SignedMessage) bool {
@@ -222,6 +225,7 @@ func (mm *mmUI) messageLising(a address.Address) func(*imtui.Tui) error {
 	}
 }
 
+// 消息详情
 func (mm *mmUI) messageDetail(mi msgInfo) func(*imtui.Tui) error {
 	baseFee, err := mm.srv.GetBaseFee(mm.ctx)
 	if err != nil {
@@ -331,6 +335,7 @@ func (mm *mmUI) messageDetail(mi msgInfo) func(*imtui.Tui) error {
 	}
 }
 
+// 确认场景
 func confirmationScene(yes *bool, ask ...string) func(*imtui.Tui) error {
 	return func(t *imtui.Tui) error {
 		row := 0

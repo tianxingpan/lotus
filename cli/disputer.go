@@ -36,17 +36,18 @@ type minerDeadline struct {
 	index uint64
 }
 
+// 命令：争议者，与窗口帖子争议者互动
 var ChainDisputeSetCmd = &cli.Command{
 	Name:  "disputer",
 	Usage: "interact with the window post disputer",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "max-fee",
-			Usage: "Spend up to X FIL per DisputeWindowedPoSt message",
+			Usage: "Spend up to X FIL per DisputeWindowedPoSt message",  // 每条 DisputeWindowedPoSt 消息最多花费 X FIL
 		},
 		&cli.StringFlag{
 			Name:  "from",
-			Usage: "optionally specify the account to send messages from",
+			Usage: "optionally specify the account to send messages from", // 可选地指定要从中发送消息的帐户
 		},
 	},
 	Subcommands: []*cli.Command{
@@ -55,6 +56,7 @@ var ChainDisputeSetCmd = &cli.Command{
 	},
 }
 
+// 命令：争议，发送特定的 DisputeWindowedPoSt 消息
 var disputerMsgCmd = &cli.Command{
 	Name:      "dispute",
 	Usage:     "Send a specific DisputeWindowedPoSt message",
@@ -136,6 +138,7 @@ var disputerMsgCmd = &cli.Command{
 	},
 }
 
+// 命令：启动窗口帖子争议器
 var disputerStartCmd = &cli.Command{
 	Name:      "start",
 	Usage:     "Start the window post disputer",
@@ -365,6 +368,8 @@ var disputerStartCmd = &cli.Command{
 
 // for a given miner, index, and maxPostIndex, tries to dispute posts from 0...postsSnapshotted-1
 // returns a list of DisputeWindowedPoSt msgs that are expected to succeed if sent
+// 对于给定的矿工、索引和 maxPostIndex，尝试对来自 0...postsSnapshotted-1 的帖子提出异议，
+// 返回一个 DisputeWindowedPoSt 消息列表，如果发送，这些消息预计会成功
 func makeDisputeWindowedPosts(ctx context.Context, api v0api.FullNode, dl minerDeadline, postsSnapshotted uint64, sender address.Address) ([]*types.Message, error) {
 	disputes := make([]*types.Message, 0)
 
@@ -397,6 +402,7 @@ func makeDisputeWindowedPosts(ctx context.Context, api v0api.FullNode, dl minerD
 	return disputes, nil
 }
 
+// 制定矿工期限/截止日期
 func makeMinerDeadline(ctx context.Context, api v0api.FullNode, mAddr address.Address) (abi.ChainEpoch, *minerDeadline, error) {
 	dl, err := api.StateMinerProvingDeadline(ctx, mAddr, types.EmptyTSK)
 	if err != nil {
@@ -409,6 +415,7 @@ func makeMinerDeadline(ctx context.Context, api v0api.FullNode, mAddr address.Ad
 	}, nil
 }
 
+// 获取发送者
 func getSender(ctx context.Context, api v0api.FullNode, fromStr string) (address.Address, error) {
 	if fromStr == "" {
 		return api.WalletDefaultAddress(ctx)
@@ -431,6 +438,7 @@ func getSender(ctx context.Context, api v0api.FullNode, fromStr string) (address
 	return addr, nil
 }
 
+// 获取最大费用
 func getMaxFee(maxStr string) (*lapi.MessageSendSpec, error) {
 	if maxStr != "" {
 		maxFee, err := types.ParseFIL(maxStr)

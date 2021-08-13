@@ -13,7 +13,7 @@ import (
 var log = logging.Logger("cli")
 
 // custom CLI error
-
+// 自定义CLI错误
 type ErrCmdFailed struct {
 	msg string
 }
@@ -29,6 +29,7 @@ func NewCliError(s string) error {
 // ApiConnector returns API instance
 type ApiConnector func() api.FullNode
 
+// 获取完整节点服务
 func GetFullNodeServices(ctx *cli.Context) (ServicesAPI, error) {
 	if tn, ok := ctx.App.Metadata["test-services"]; ok {
 		return tn.(ServicesAPI), nil
@@ -57,6 +58,7 @@ var GetStorageMinerAPI = cliutil.GetStorageMinerAPI
 var GetMarketsAPI = cliutil.GetMarketsAPI
 var GetWorkerAPI = cliutil.GetWorkerAPI
 
+// 常用命令
 var CommonCommands = []*cli.Command{
 	NetCmd,
 	AuthCmd,
@@ -88,6 +90,7 @@ var Commands = []*cli.Command{
 	VersionCmd,
 }
 
+// 命令分类
 func WithCategory(cat string, cmd *cli.Command) *cli.Command {
 	cmd.Category = strings.ToUpper(cat)
 	return cmd

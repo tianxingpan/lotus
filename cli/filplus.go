@@ -24,6 +24,7 @@ import (
 	cbor "github.com/ipfs/go-ipld-cbor"
 )
 
+// 命令：与Filplus使用的已验证注册表参与者交互
 var filplusCmd = &cli.Command{
 	Name:  "filplus",
 	Usage: "Interact with the verified registry actor used by Filplus",
@@ -37,6 +38,7 @@ var filplusCmd = &cli.Command{
 	},
 }
 
+// 子命令：允许指定的已验证客户地址
 var filplusVerifyClientCmd = &cli.Command{
 	Name:  "grant-datacap",
 	Usage: "give allowance to the specified verified client address",
@@ -125,6 +127,7 @@ var filplusVerifyClientCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出所有公证人
 var filplusListNotariesCmd = &cli.Command{
 	Name:  "list-notaries",
 	Usage: "list all notaries",
@@ -155,6 +158,7 @@ var filplusListNotariesCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出所有已验证的客户端
 var filplusListClientsCmd = &cli.Command{
 	Name:  "list-clients",
 	Usage: "list all verified clients",
@@ -185,6 +189,7 @@ var filplusListClientsCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查已验证的客户端剩余字节
 var filplusCheckClientCmd = &cli.Command{
 	Name:  "check-client-datacap",
 	Usage: "check verified client remaining bytes",
@@ -219,6 +224,7 @@ var filplusCheckClientCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查公证人的剩余字节
 var filplusCheckNotaryCmd = &cli.Command{
 	Name:  "check-notaries-datacap",
 	Usage: "check notaries remaining bytes",
@@ -253,6 +259,7 @@ var filplusCheckNotaryCmd = &cli.Command{
 	},
 }
 
+// 检查公证人
 func checkNotary(ctx context.Context, api v0api.FullNode, vaddr address.Address) (bool, abi.StoragePower, error) {
 	vid, err := api.StateLookupID(ctx, vaddr, types.EmptyTSK)
 	if err != nil {

@@ -36,6 +36,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// 命令：与多重签名钱包互动
 var multisigCmd = &cli.Command{
 	Name:  "msig",
 	Usage: "Interact with a multisig wallet",
@@ -66,6 +67,7 @@ var multisigCmd = &cli.Command{
 	},
 }
 
+//
 var msigCreateCmd = &cli.Command{
 	Name:      "create",
 	Usage:     "Create a new multisig wallet",
