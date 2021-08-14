@@ -9,6 +9,7 @@ import (
 	"github.com/filecoin-project/lotus/build"
 )
 
+// 命令：获取证明参数
 var FetchParamCmd = &cli.Command{
 	Name:      "fetch-params",
 	Usage:     "Fetch proving parameters",

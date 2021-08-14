@@ -14,6 +14,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// 命令：在帐户之间发送资金
 var sendCmd = &cli.Command{
 	Name:      "send",
 	Usage:     "Send funds between accounts",

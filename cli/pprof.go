@@ -1,5 +1,7 @@
 package cli
 
+// pprof命令为系统监测命令，主要用于分析问题。
+
 import (
 	"io"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 	"github.com/filecoin-project/lotus/node/repo"
 )
 
+// 命令：pprof，调用go语言runtime来收集程序运行信息。
 var PprofCmd = &cli.Command{
 	Name:   "pprof",
 	Hidden: true,
@@ -19,6 +22,7 @@ var PprofCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取 goroutine 堆栈
 var PprofGoroutines = &cli.Command{
 	Name:  "goroutines",
 	Usage: "Get goroutine stacks",

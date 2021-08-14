@@ -19,6 +19,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// 互动发送
 func InteractiveSend(ctx context.Context, cctx *cli.Context, srv ServicesAPI,
 	proto *api.MessagePrototype) (*types.SignedMessage, error) {
 
@@ -26,7 +27,7 @@ func InteractiveSend(ctx context.Context, cctx *cli.Context, srv ServicesAPI,
 	printer := cctx.App.Writer
 	if xerrors.Is(err, ErrCheckFailed) {
 		if !cctx.Bool("interactive") {
-			fmt.Fprintf(printer, "Following checks have failed:\n")
+			_, _ = fmt.Fprintf(printer, "Following checks have failed:\n")
 			printChecks(printer, checks, proto.Message.Cid())
 		} else {
 			proto, err = resolveChecks(ctx, srv, cctx.App.Writer, proto, checks)

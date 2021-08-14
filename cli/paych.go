@@ -20,6 +20,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// 命令：管理支付渠道
 var paychCmd = &cli.Command{
 	Name:  "paych",
 	Usage: "Manage payment channels",
@@ -34,6 +35,7 @@ var paychCmd = &cli.Command{
 	},
 }
 
+// 子命令： 向 fromAddress 和 toAddress 之间的支付通道添加资金。如果支付渠道尚不存在，则创建支付渠道。
 var paychAddFundsCmd = &cli.Command{
 	Name:      "add-funds",
 	Usage:     "Add funds to the payment channel between fromAddress and toAddress. Creates the payment channel if it doesn't already exist.",
@@ -96,6 +98,7 @@ var paychAddFundsCmd = &cli.Command{
 	},
 }
 
+// 子命令：按发件人/收件人地址显示活动出站支付渠道的状态
 var paychStatusByFromToCmd = &cli.Command{
 	Name:      "status-by-from-to",
 	Usage:     "Show the status of an active outbound payment channel by from/to addresses",
@@ -132,6 +135,7 @@ var paychStatusByFromToCmd = &cli.Command{
 	},
 }
 
+// 子命令：显示出境支付渠道的状态
 var paychStatusCmd = &cli.Command{
 	Name:      "status",
 	Usage:     "Show the status of an outbound payment channel",
@@ -163,6 +167,7 @@ var paychStatusCmd = &cli.Command{
 	},
 }
 
+// 支付状态
 func paychStatus(writer io.Writer, avail *api.ChannelAvailableFunds) {
 	if avail.Channel == nil {
 		if avail.PendingWaitSentinel != nil {
@@ -203,6 +208,7 @@ func paychStatus(writer io.Writer, avail *api.ChannelAvailableFunds) {
 	fmt.Fprint(writer, formatNameValues(nameValues))
 }
 
+// 格式名称值
 func formatNameValues(nameValues [][]string) string {
 	maxLen := 0
 	for _, nv := range nameValues {
@@ -218,6 +224,7 @@ func formatNameValues(nameValues [][]string) string {
 	return strings.Join(out, "\n") + "\n"
 }
 
+// 子命令：列出所有本地注册的支付渠道
 var paychListCmd = &cli.Command{
 	Name:  "list",
 	Usage: "List all locally registered payment channels",
@@ -242,6 +249,7 @@ var paychListCmd = &cli.Command{
 	},
 }
 
+// 子命令：结算支付渠道
 var paychSettleCmd = &cli.Command{
 	Name:      "settle",
 	Usage:     "Settle a payment channel",
@@ -282,6 +290,7 @@ var paychSettleCmd = &cli.Command{
 	},
 }
 
+// 子命令：为支付渠道筹集资金
 var paychCloseCmd = &cli.Command{
 	Name:      "collect",
 	Usage:     "Collect funds for a payment channel",
@@ -322,6 +331,7 @@ var paychCloseCmd = &cli.Command{
 	},
 }
 
+// 子命令：与支付渠道凭证互动
 var paychVoucherCmd = &cli.Command{
 	Name:  "voucher",
 	Usage: "Interact with payment channel vouchers",
@@ -335,6 +345,7 @@ var paychVoucherCmd = &cli.Command{
 	},
 }
 
+// 子命令：创建已签名的支付渠道凭证
 var paychVoucherCreateCmd = &cli.Command{
 	Name:      "create",
 	Usage:     "Create a signed payment channel voucher",
@@ -390,6 +401,7 @@ var paychVoucherCreateCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查支付渠道凭证的有效性
 var paychVoucherCheckCmd = &cli.Command{
 	Name:      "check",
 	Usage:     "Check validity of payment channel voucher",
@@ -426,6 +438,7 @@ var paychVoucherCheckCmd = &cli.Command{
 	},
 }
 
+// 子命令：将支付渠道凭证添加到本地数据存储
 var paychVoucherAddCmd = &cli.Command{
 	Name:      "add",
 	Usage:     "Add payment channel voucher to local datastore",
@@ -462,6 +475,7 @@ var paychVoucherAddCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出给定支付渠道的存储凭证
 var paychVoucherListCmd = &cli.Command{
 	Name:      "list",
 	Usage:     "List stored vouchers for a given payment channel",
@@ -507,6 +521,7 @@ var paychVoucherListCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印每个通道当前可花费的最高价值的代金券
 var paychVoucherBestSpendableCmd = &cli.Command{
 	Name:      "best-spendable",
 	Usage:     "Print vouchers with highest value that is currently spendable for each lane",
@@ -556,6 +571,7 @@ var paychVoucherBestSpendableCmd = &cli.Command{
 	},
 }
 
+// 排序凭证
 func sortVouchers(vouchers []*paych.SignedVoucher) []*paych.SignedVoucher {
 	sort.Slice(vouchers, func(i, j int) bool {
 		if vouchers[i].Lane == vouchers[j].Lane {
@@ -566,6 +582,7 @@ func sortVouchers(vouchers []*paych.SignedVoucher) []*paych.SignedVoucher {
 	return vouchers
 }
 
+// 输出凭证
 func outputVoucher(w io.Writer, v *paych.SignedVoucher, export bool) error {
 	var enc string
 	if export {
@@ -584,6 +601,7 @@ func outputVoucher(w io.Writer, v *paych.SignedVoucher, export bool) error {
 	return nil
 }
 
+// 子命令：提交凭证到链更新支付通道状态
 var paychVoucherSubmitCmd = &cli.Command{
 	Name:      "submit",
 	Usage:     "Submit voucher to chain to update payment channel state",
@@ -631,6 +649,7 @@ var paychVoucherSubmitCmd = &cli.Command{
 	},
 }
 
+// 编码字符串
 func EncodedString(sv *paych.SignedVoucher) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := sv.MarshalCBOR(buf); err != nil {

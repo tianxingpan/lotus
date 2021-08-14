@@ -67,7 +67,7 @@ var multisigCmd = &cli.Command{
 	},
 }
 
-//
+// 子命令：创建一个新的多签名钱包
 var msigCreateCmd = &cli.Command{
 	Name:      "create",
 	Usage:     "Create a new multisig wallet",
@@ -187,6 +187,7 @@ var msigCreateCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查多重签名钱包
 var msigInspectCmd = &cli.Command{
 	Name:      "inspect",
 	Usage:     "Inspect a multisig wallet",
@@ -356,6 +357,7 @@ var msigInspectCmd = &cli.Command{
 	},
 }
 
+// 子命令：提出多重签名交易
 var msigProposeCmd = &cli.Command{
 	Name:      "propose",
 	Usage:     "Propose a multisig transaction",
@@ -478,6 +480,7 @@ var msigProposeCmd = &cli.Command{
 	},
 }
 
+// 子命令：批准多签消息
 var msigApproveCmd = &cli.Command{
 	Name:      "approve",
 	Usage:     "Approve a multisig message",
@@ -615,6 +618,7 @@ var msigApproveCmd = &cli.Command{
 	},
 }
 
+// 子命令：建议删除签名者
 var msigRemoveProposeCmd = &cli.Command{
 	Name:      "propose-remove",
 	Usage:     "Propose to remove a signer",
@@ -702,6 +706,7 @@ var msigRemoveProposeCmd = &cli.Command{
 	},
 }
 
+// 子命令：建议添加签名者
 var msigAddProposeCmd = &cli.Command{
 	Name:      "add-propose",
 	Usage:     "Propose to add a signer",
@@ -782,6 +787,7 @@ var msigAddProposeCmd = &cli.Command{
 	},
 }
 
+// 子命令：批准消息以添加签名者
 var msigAddApproveCmd = &cli.Command{
 	Name:      "add-approve",
 	Usage:     "Approve a message to add a signer",
@@ -873,6 +879,7 @@ var msigAddApproveCmd = &cli.Command{
 	},
 }
 
+// 子命令：取消消息以添加签名者
 var msigAddCancelCmd = &cli.Command{
 	Name:      "add-cancel",
 	Usage:     "Cancel a message to add a signer",
@@ -959,6 +966,7 @@ var msigAddCancelCmd = &cli.Command{
 	},
 }
 
+// 子命令：提议交换签名者
 var msigSwapProposeCmd = &cli.Command{
 	Name:      "swap-propose",
 	Usage:     "Propose to swap signers",
@@ -1040,6 +1048,7 @@ var msigSwapProposeCmd = &cli.Command{
 	},
 }
 
+// 子命令：批准消息以交换签名者
 var msigSwapApproveCmd = &cli.Command{
 	Name:      "swap-approve",
 	Usage:     "Approve a message to swap signers",
@@ -1131,6 +1140,7 @@ var msigSwapApproveCmd = &cli.Command{
 	},
 }
 
+// 子命令：取消交换签名者的消息
 var msigSwapCancelCmd = &cli.Command{
 	Name:      "swap-cancel",
 	Usage:     "Cancel a message to swap signers",
@@ -1217,6 +1227,7 @@ var msigSwapCancelCmd = &cli.Command{
 	},
 }
 
+// 子命令：建议锁定一些余额
 var msigLockProposeCmd = &cli.Command{
 	Name:      "lock-propose",
 	Usage:     "Propose to lock up some balance",
@@ -1313,6 +1324,7 @@ var msigLockProposeCmd = &cli.Command{
 	},
 }
 
+// 子命令：批准消息以锁定一些余额
 var msigLockApproveCmd = &cli.Command{
 	Name:      "lock-approve",
 	Usage:     "Approve a message to lock up some balance",
@@ -1419,6 +1431,7 @@ var msigLockApproveCmd = &cli.Command{
 	},
 }
 
+// 子命令：取消消息以锁定一些余额
 var msigLockCancelCmd = &cli.Command{
 	Name:      "lock-cancel",
 	Usage:     "Cancel a message to lock up some balance",
@@ -1520,6 +1533,7 @@ var msigLockCancelCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取两个历元之间归属于msig的金额
 var msigVestedCmd = &cli.Command{
 	Name:      "vested",
 	Usage:     "Gets the amount vested in an msig between two epochs",
@@ -1582,6 +1596,7 @@ var msigVestedCmd = &cli.Command{
 	},
 }
 
+// 子命令：建议对帐户设置不同的签名阈值
 var msigProposeThresholdCmd = &cli.Command{
 	Name:      "propose-threshold",
 	Usage:     "Propose setting a different signing threshold on the account",

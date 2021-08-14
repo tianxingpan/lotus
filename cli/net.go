@@ -23,6 +23,7 @@ import (
 	"github.com/filecoin-project/lotus/lib/addrutil"
 )
 
+// 命令：管理P2P网络
 var NetCmd = &cli.Command{
 	Name:  "net",
 	Usage: "Manage P2P Network",
@@ -39,6 +40,7 @@ var NetCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印详情
 var NetPeers = &cli.Command{
 	Name:  "peers",
 	Usage: "Print peers",
@@ -112,6 +114,7 @@ var NetPeers = &cli.Command{
 	},
 }
 
+// 子命令：打印同行的 pubsub 分数
 var NetScores = &cli.Command{
 	Name:  "scores",
 	Usage: "Print peers' pubsub scores",
@@ -152,6 +155,7 @@ var NetScores = &cli.Command{
 	},
 }
 
+// 子命令：列出监听地址
 var NetListen = &cli.Command{
 	Name:  "listen",
 	Usage: "List listen addresses",
@@ -175,6 +179,7 @@ var NetListen = &cli.Command{
 	},
 }
 
+// 子命令：连接到对等机
 var NetConnect = &cli.Command{
 	Name:      "connect",
 	Usage:     "Connect to a peer",
@@ -242,6 +247,7 @@ var NetConnect = &cli.Command{
 	},
 }
 
+// 子命令：获取节点标识
 var NetId = &cli.Command{
 	Name:  "id",
 	Usage: "Get node identity",
@@ -264,6 +270,7 @@ var NetId = &cli.Command{
 	},
 }
 
+// 子命令：查找给定peerID的地址
 var NetFindPeer = &cli.Command{
 	Name:      "findpeer",
 	Usage:     "Find the addresses of a given peerID",
@@ -298,6 +305,7 @@ var NetFindPeer = &cli.Command{
 	},
 }
 
+// 子命令：打印有关 Internet 可达性的信息
 var NetReachability = &cli.Command{
 	Name:  "reachability",
 	Usage: "Print information about reachability from the internet",
@@ -323,6 +331,7 @@ var NetReachability = &cli.Command{
 	},
 }
 
+// 子命令：打印带宽使用信息
 var NetBandwidthCmd = &cli.Command{
 	Name:  "bandwidth",
 	Usage: "Print bandwidth usage information",
@@ -408,6 +417,7 @@ var NetBandwidthCmd = &cli.Command{
 	},
 }
 
+// 子命令：管理网络连接选通规则
 var NetBlockCmd = &cli.Command{
 	Name:  "block",
 	Usage: "Manage network connection gating rules",
@@ -418,6 +428,7 @@ var NetBlockCmd = &cli.Command{
 	},
 }
 
+// 子命令：添加连接选通规则
 var NetBlockAddCmd = &cli.Command{
 	Name:  "add",
 	Usage: "Add connection gating rules",
@@ -428,6 +439,7 @@ var NetBlockAddCmd = &cli.Command{
 	},
 }
 
+// 子命令：阻止对等方
 var NetBlockAddPeer = &cli.Command{
 	Name:      "peer",
 	Usage:     "Block a peer",
@@ -454,6 +466,7 @@ var NetBlockAddPeer = &cli.Command{
 	},
 }
 
+// 子命令：阻止 IP 地址
 var NetBlockAddIP = &cli.Command{
 	Name:      "ip",
 	Usage:     "Block an IP address",
@@ -470,6 +483,7 @@ var NetBlockAddIP = &cli.Command{
 	},
 }
 
+// 子命令：阻止 IP 子网
 var NetBlockAddSubnet = &cli.Command{
 	Name:      "subnet",
 	Usage:     "Block an IP subnet",
@@ -486,6 +500,7 @@ var NetBlockAddSubnet = &cli.Command{
 	},
 }
 
+// 子命令：删除连接门控规则
 var NetBlockRemoveCmd = &cli.Command{
 	Name:  "remove",
 	Usage: "Remove connection gating rules",
@@ -496,6 +511,7 @@ var NetBlockRemoveCmd = &cli.Command{
 	},
 }
 
+// 子命令：取消阻止对等方
 var NetBlockRemovePeer = &cli.Command{
 	Name:      "peer",
 	Usage:     "Unblock a peer",
@@ -522,6 +538,7 @@ var NetBlockRemovePeer = &cli.Command{
 	},
 }
 
+// 子命令：取消阻止 IP 地址
 var NetBlockRemoveIP = &cli.Command{
 	Name:      "ip",
 	Usage:     "Unblock an IP address",
@@ -538,6 +555,7 @@ var NetBlockRemoveIP = &cli.Command{
 	},
 }
 
+// 子命令：取消阻止IP子网
 var NetBlockRemoveSubnet = &cli.Command{
 	Name:      "subnet",
 	Usage:     "Unblock an IP subnet",
@@ -554,6 +572,7 @@ var NetBlockRemoveSubnet = &cli.Command{
 	},
 }
 
+// 子命令：列出连接门控规则
 var NetBlockListCmd = &cli.Command{
 	Name:  "list",
 	Usage: "list connection gating rules",
