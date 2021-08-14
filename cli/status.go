@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/lotus/build"
 )
 
+// 命令：检查节点状态
 var StatusCmd = &cli.Command{
 	Name:  "status",
 	Usage: "Check node status",

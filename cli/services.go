@@ -21,6 +21,7 @@ import (
 
 //go:generate go run github.com/golang/mock/mockgen -destination=servicesmock_test.go -package=cli -self_package github.com/filecoin-project/lotus/cli . ServicesAPI
 
+// 服务API
 type ServicesAPI interface {
 	FullNodeAPI() api.FullNode
 
@@ -52,11 +53,13 @@ type ServicesAPI interface {
 	Close() error
 }
 
+// 服务实现服务实现
 type ServicesImpl struct {
 	api    api.FullNode
 	closer jsonrpc.ClientCloser
 }
 
+// 全节点API
 func (s *ServicesImpl) FullNodeAPI() api.FullNode {
 	return s.api
 }
@@ -70,6 +73,7 @@ func (s *ServicesImpl) Close() error {
 	return nil
 }
 
+// 获取基础费用
 func (s *ServicesImpl) GetBaseFee(ctx context.Context) (abi.TokenAmount, error) {
 	// not used but useful
 
@@ -80,6 +84,7 @@ func (s *ServicesImpl) GetBaseFee(ctx context.Context) (abi.TokenAmount, error) 
 	return ts.MinTicketBlock().ParentBaseFee, nil
 }
 
+// 从 JSON 解码类型化参数
 func (s *ServicesImpl) DecodeTypedParamsFromJSON(ctx context.Context, to address.Address, method abi.MethodNum, paramstr string) ([]byte, error) {
 	act, err := s.api.StateGetActor(ctx, to, types.EmptyTSK)
 	if err != nil {
@@ -104,15 +109,18 @@ func (s *ServicesImpl) DecodeTypedParamsFromJSON(ctx context.Context, to address
 	return buf.Bytes(), nil
 }
 
+// 检查信息
 type CheckInfo struct {
-	MessageTie        cid.Cid
+	MessageTie        cid.Cid	// 留言板
 	CurrentMessageTie bool
 
 	Check api.MessageCheckStatus
 }
 
+// 检查失败
 var ErrCheckFailed = fmt.Errorf("check has failed")
 
+// 运行原型检查
 func (s *ServicesImpl) RunChecksForPrototype(ctx context.Context, prototype *api.MessagePrototype) ([][]api.MessageCheckStatus, error) {
 	var outChecks [][]api.MessageCheckStatus
 	checks, err := s.api.MpoolCheckMessages(ctx, []*api.MessagePrototype{prototype})
@@ -133,6 +141,7 @@ func (s *ServicesImpl) RunChecksForPrototype(ctx context.Context, prototype *api
 // PublishMessage modifies prototype to include gas estimation
 // Errors with ErrCheckFailed if any of the checks fail
 // First group of checks is related to the message prototype
+// 发布消息
 func (s *ServicesImpl) PublishMessage(ctx context.Context,
 	prototype *api.MessagePrototype, force bool) (*types.SignedMessage, [][]api.MessageCheckStatus, error) {
 
@@ -177,6 +186,7 @@ func (s *ServicesImpl) PublishMessage(ctx context.Context,
 	return sm, nil, nil
 }
 
+// 发送参数
 type SendParams struct {
 	To   address.Address
 	From address.Address
@@ -191,6 +201,7 @@ type SendParams struct {
 	Params []byte
 }
 
+// 发送消息
 func (s *ServicesImpl) MessageForSend(ctx context.Context, params SendParams) (*api.MessagePrototype, error) {
 	if params.From == address.Undef {
 		defaddr, err := s.api.WalletDefaultAddress(ctx)
@@ -237,6 +248,7 @@ func (s *ServicesImpl) MessageForSend(ctx context.Context, params SendParams) (*
 	return prototype, nil
 }
 
+// Mpool待处理过滤器
 func (s *ServicesImpl) MpoolPendingFilter(ctx context.Context, filter func(*types.SignedMessage) bool,
 	tsk types.TipSetKey) ([]*types.SignedMessage, error) {
 	msgs, err := s.api.MpoolPending(ctx, types.EmptyTSK)
@@ -253,6 +265,7 @@ func (s *ServicesImpl) MpoolPendingFilter(ctx context.Context, filter func(*type
 	return out, nil
 }
 
+// 本地地址
 func (s *ServicesImpl) LocalAddresses(ctx context.Context) (address.Address, []address.Address, error) {
 	def, err := s.api.WalletDefaultAddress(ctx)
 	if err != nil {
@@ -267,6 +280,7 @@ func (s *ServicesImpl) LocalAddresses(ctx context.Context) (address.Address, []a
 	return def, all, nil
 }
 
+// Mpool检查待处理消息
 func (s *ServicesImpl) MpoolCheckPendingMessages(ctx context.Context, a address.Address) ([][]api.MessageCheckStatus, error) {
 	checks, err := s.api.MpoolCheckPendingMessages(ctx, a)
 	if err != nil {

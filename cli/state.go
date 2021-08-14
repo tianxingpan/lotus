@@ -45,6 +45,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// 命令：与 Filecoin 链状态交互和查询
 var StateCmd = &cli.Command{
 	Name:  "state",
 	Usage: "Interact with and query filecoin chain state",
@@ -81,6 +82,7 @@ var StateCmd = &cli.Command{
 	},
 }
 
+// 子命令：检索有关给定矿工的证明截止日期的信息
 var StateMinerProvingDeadlineCmd = &cli.Command{
 	Name:      "miner-proving-deadline",
 	Usage:     "Retrieve information about a given miner's proving deadline",
@@ -124,6 +126,7 @@ var StateMinerProvingDeadlineCmd = &cli.Command{
 	},
 }
 
+// 子命令：检索矿工信息
 var StateMinerInfo = &cli.Command{
 	Name:      "miner-info",
 	Usage:     "Retrieve miner information",
@@ -216,6 +219,7 @@ var StateMinerInfo = &cli.Command{
 	},
 }
 
+// 解析提示集字符串
 func ParseTipSetString(ts string) ([]cid.Cid, error) {
 	strs := strings.Split(ts, ",")
 
@@ -232,8 +236,10 @@ func ParseTipSetString(ts string) ([]cid.Cid, error) {
 }
 
 // LoadTipSet gets the tipset from the context, or the head from the API.
-//
+// LoadTipSet 从上下文中获取提示集，或者从 API 中获取头部。
 // It always gets the head from the API so commands use a consistent tipset even if time pases.
+// 它总是从 API 获取信息，因此即使时间过去，命令也会使用一致的提示集。
+// 加载提示集
 func LoadTipSet(ctx context.Context, cctx *cli.Context, api v0api.FullNode) (*types.TipSet, error) {
 	tss := cctx.String("tipset")
 	if tss == "" {
@@ -243,6 +249,7 @@ func LoadTipSet(ctx context.Context, cctx *cli.Context, api v0api.FullNode) (*ty
 	return ParseTipSetRef(ctx, api, tss)
 }
 
+// 解析提示集引用
 func ParseTipSetRef(ctx context.Context, api v0api.FullNode, tss string) (*types.TipSet, error) {
 	if tss[0] == '@' {
 		if tss == "@head" {
@@ -275,6 +282,7 @@ func ParseTipSetRef(ctx context.Context, api v0api.FullNode, tss string) (*types
 	return ts, nil
 }
 
+// 子命令：查询网络或矿机算力
 var StatePowerCmd = &cli.Command{
 	Name:      "power",
 	Usage:     "Query network or miner power",
@@ -335,6 +343,7 @@ var StatePowerCmd = &cli.Command{
 	},
 }
 
+// 子命令：查询矿工的扇区集
 var StateSectorsCmd = &cli.Command{
 	Name:      "sectors",
 	Usage:     "Query the sector set of a miner",
@@ -375,6 +384,7 @@ var StateSectorsCmd = &cli.Command{
 	},
 }
 
+// 子命令：查询矿工的活跃扇区集
 var StateActiveSectorsCmd = &cli.Command{
 	Name:      "active-sectors",
 	Usage:     "Query the active sector set of a miner",
@@ -415,6 +425,7 @@ var StateActiveSectorsCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取给定消息的执行跟踪
 var StateExecTraceCmd = &cli.Command{
 	Name:      "exec-trace",
 	Usage:     "Get the execution trace of a given message",
@@ -486,6 +497,7 @@ var StateExecTraceCmd = &cli.Command{
 	},
 }
 
+// 子命令：回放特定消息
 var StateReplayCmd = &cli.Command{
 	Name:      "replay",
 	Usage:     "Replay a particular message",
@@ -551,6 +563,7 @@ var StateReplayCmd = &cli.Command{
 	},
 }
 
+// 子命令：查看链上交易信息
 var StateGetDealSetCmd = &cli.Command{
 	Name:      "get-deal",
 	Usage:     "View on-chain deal info",
@@ -593,6 +606,7 @@ var StateGetDealSetCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出网络中的所有矿工
 var StateListMinersCmd = &cli.Command{
 	Name:  "list-miners",
 	Usage: "list all miners in the network",
@@ -649,6 +663,7 @@ var StateListMinersCmd = &cli.Command{
 	},
 }
 
+// 获取交易计数
 func getDealsCounts(ctx context.Context, lapi v0api.FullNode) (map[address.Address]int, error) {
 	allDeals, err := lapi.StateMarketDeals(ctx, types.EmptyTSK)
 	if err != nil {
@@ -665,6 +680,7 @@ func getDealsCounts(ctx context.Context, lapi v0api.FullNode) (map[address.Addre
 	return out, nil
 }
 
+// 子命令：列出网络中的所有参与者
 var StateListActorsCmd = &cli.Command{
 	Name:  "list-actors",
 	Usage: "list all actors in the network",
@@ -695,6 +711,7 @@ var StateListActorsCmd = &cli.Command{
 	},
 }
 
+// 子命令：打印actor信息
 var StateGetActorCmd = &cli.Command{
 	Name:      "get-actor",
 	Usage:     "Print actor information",
@@ -739,6 +756,7 @@ var StateGetActorCmd = &cli.Command{
 	},
 }
 
+// 子命令：找到对应的身份证地址
 var StateLookupIDCmd = &cli.Command{
 	Name:      "lookup",
 	Usage:     "Find corresponding ID address",
@@ -790,6 +808,7 @@ var StateLookupIDCmd = &cli.Command{
 	},
 }
 
+// 子命令：查找矿工部门规模
 var StateSectorSizeCmd = &cli.Command{
 	Name:      "sector-size",
 	Usage:     "Look up miners sector size",
@@ -827,6 +846,7 @@ var StateSectorSizeCmd = &cli.Command{
 	},
 }
 
+// 子命令：查看参与者状态的json表示
 var StateReadStateCmd = &cli.Command{
 	Name:      "read-state",
 	Usage:     "View a json representation of an actors state",
@@ -869,6 +889,7 @@ var StateReadStateCmd = &cli.Command{
 	},
 }
 
+// 子命令：列出与给定条件匹配的链上的消息
 var StateListMessagesCmd = &cli.Command{
 	Name:  "list-messages",
 	Usage: "list messages on chain matching given criteria",
@@ -974,6 +995,7 @@ var StateListMessagesCmd = &cli.Command{
 	},
 }
 
+// 子命令：执行状态计算
 var StateComputeStateCmd = &cli.Command{
 	Name:  "compute-state",
 	Usage: "Perform state computations",
@@ -1106,6 +1128,7 @@ var StateComputeStateCmd = &cli.Command{
 	},
 }
 
+// 打印内部执行
 func printInternalExecutions(prefix string, trace []types.ExecutionTrace) {
 	for _, im := range trace {
 		fmt.Printf("%s%s\t%s\t%s\t%d\t%x\t%d\t%x\n", prefix, im.Msg.From, im.Msg.To, im.Msg.Value, im.Msg.Method, im.Msg.Params, im.MsgRct.ExitCode, im.MsgRct.Return)
@@ -1113,6 +1136,7 @@ func printInternalExecutions(prefix string, trace []types.ExecutionTrace) {
 	}
 }
 
+// 计算机状态模板 THML
 var compStateTemplate = `
 <html>
  <head>
@@ -1189,6 +1213,7 @@ var compStateTemplate = `
 </html>
 `
 
+// 计算机状态消息
 var compStateMsg = `
 <div class="exec" id="{{.Hash}}">
  {{$code := GetCode .Msg.To}}
@@ -1298,11 +1323,13 @@ var compStateMsg = `
  {{end}}
 </div>`
 
+// 计算机状态 HTML 输入
 type compStateHTMLIn struct {
 	TipSet *types.TipSet
 	Comp   *api.ComputeStateOutput
 }
 
+// 计算机状态HTML模版
 func ComputeStateHTMLTempl(w io.Writer, ts *types.TipSet, o *api.ComputeStateOutput, printTiming bool, getCode func(addr address.Address) (cid.Cid, error)) error {
 	t, err := template.New("compute_state").Funcs(map[string]interface{}{
 		"GetCode":     getCode,
@@ -1343,6 +1370,7 @@ func ComputeStateHTMLTempl(w io.Writer, ts *types.TipSet, o *api.ComputeStateOut
 	})
 }
 
+// 调用元
 type callMeta struct {
 	types.ExecutionTrace
 	Subcall bool
@@ -1425,6 +1453,7 @@ func jsonReturn(code cid.Cid, method abi.MethodNum, ret []byte) (string, error) 
 	return string(b), err
 }
 
+// 子命令：等待消息出现在链上
 var StateWaitMsgCmd = &cli.Command{
 	Name:      "wait-msg",
 	Usage:     "Wait for a message to appear on chain",
@@ -1467,6 +1496,7 @@ var StateWaitMsgCmd = &cli.Command{
 	},
 }
 
+// 子命令：搜索以查看消息是否出现在链上
 var StateSearchMsgCmd = &cli.Command{
 	Name:      "search-msg",
 	Usage:     "Search to see whether a message has appeared on chain",
@@ -1507,6 +1537,7 @@ var StateSearchMsgCmd = &cli.Command{
 	},
 }
 
+// 打印收据返回
 func printReceiptReturn(ctx context.Context, api v0api.FullNode, m *types.Message, r types.MessageReceipt) error {
 	if len(r.Return) == 0 {
 		return nil
@@ -1527,6 +1558,7 @@ func printReceiptReturn(ctx context.Context, api v0api.FullNode, m *types.Messag
 	return nil
 }
 
+// 打印消息
 func printMsg(ctx context.Context, api v0api.FullNode, msg cid.Cid, mw *lapi.MsgLookup, m *types.Message) error {
 	if mw == nil {
 		fmt.Println("message was not found on chain")
@@ -1548,6 +1580,7 @@ func printMsg(ctx context.Context, api v0api.FullNode, msg cid.Cid, mw *lapi.Msg
 	return nil
 }
 
+// 子命令：在本地调用 actor 上的方法
 var StateCallCmd = &cli.Command{
 	Name:      "call",
 	Usage:     "Invoke a method on an actor locally",
@@ -1675,6 +1708,7 @@ var StateCallCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取当前 Filecoin 的确切流通供应量
 var StateCircSupplyCmd = &cli.Command{
 	Name:  "circulating-supply",
 	Usage: "Get the exact current circulating supply of Filecoin",
@@ -1724,6 +1758,7 @@ var StateCircSupplyCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取矿工行业信息
 var StateSectorCmd = &cli.Command{
 	Name:      "sector",
 	Usage:     "Get miner sector info",
@@ -1791,6 +1826,7 @@ var StateSectorCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查存储市场参与者
 var StateMarketCmd = &cli.Command{
 	Name:  "market",
 	Usage: "Inspect the storage market actor",
@@ -1799,6 +1835,7 @@ var StateMarketCmd = &cli.Command{
 	},
 }
 
+// 子命令：获取给定账户的市场余额（锁定和托管）
 var stateMarketBalanceCmd = &cli.Command{
 	Name:  "balance",
 	Usage: "Get the market balance (locked and escrowed) for a given account",
@@ -1837,6 +1874,7 @@ var stateMarketBalanceCmd = &cli.Command{
 	},
 }
 
+// 子命令：返回网络版本
 var StateNtwkVersionCmd = &cli.Command{
 	Name:  "network-version",
 	Usage: "Returns the network version",

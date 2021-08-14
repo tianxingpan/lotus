@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// 命令：等待lotus api上线
 var WaitApiCmd = &cli.Command{
 	Name:  "wait-api",
 	Usage: "Wait for lotus api to come online",

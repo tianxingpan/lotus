@@ -21,6 +21,7 @@ import (
 	"github.com/filecoin-project/lotus/lib/tablewriter"
 )
 
+// 命令：管理钱包
 var walletCmd = &cli.Command{
 	Name:  "wallet",
 	Usage: "Manage wallet",
@@ -39,6 +40,7 @@ var walletCmd = &cli.Command{
 	},
 }
 
+// 子命令：生成给定类型的新密钥
 var walletNew = &cli.Command{
 	Name:      "new",
 	Usage:     "Generate a new key of the given type",
@@ -67,6 +69,7 @@ var walletNew = &cli.Command{
 	},
 }
 
+// 子命令：列出钱包地址
 var walletList = &cli.Command{
 	Name:  "list",
 	Usage: "List wallet address",
@@ -170,6 +173,7 @@ var walletList = &cli.Command{
 	},
 }
 
+// 子命令：获取账户余额
 var walletBalance = &cli.Command{
 	Name:      "balance",
 	Usage:     "Get account balance",
@@ -207,6 +211,7 @@ var walletBalance = &cli.Command{
 	},
 }
 
+// 子命令：获取默认钱包地址
 var walletGetDefault = &cli.Command{
 	Name:  "default",
 	Usage: "Get default wallet address",
@@ -228,6 +233,7 @@ var walletGetDefault = &cli.Command{
 	},
 }
 
+// 子命令：设置默认钱包地址
 var walletSetDefault = &cli.Command{
 	Name:      "set-default",
 	Usage:     "Set default wallet address",
@@ -253,6 +259,7 @@ var walletSetDefault = &cli.Command{
 	},
 }
 
+// 子命令：导出密钥
 var walletExport = &cli.Command{
 	Name:      "export",
 	Usage:     "export keys",
@@ -289,6 +296,7 @@ var walletExport = &cli.Command{
 	},
 }
 
+// 子命令：导入密钥
 var walletImport = &cli.Command{
 	Name:      "import",
 	Usage:     "import keys",
@@ -386,6 +394,7 @@ var walletImport = &cli.Command{
 	},
 }
 
+// 子命令：签名
 var walletSign = &cli.Command{
 	Name:      "sign",
 	Usage:     "sign a message",
@@ -427,6 +436,7 @@ var walletSign = &cli.Command{
 	},
 }
 
+// 子命令：验证消息的签名
 var walletVerify = &cli.Command{
 	Name:      "verify",
 	Usage:     "verify the signature of a message",
@@ -479,6 +489,7 @@ var walletVerify = &cli.Command{
 	},
 }
 
+// 子命令：从钱包中删除帐户
 var walletDelete = &cli.Command{
 	Name:      "delete",
 	Usage:     "Delete an account from the wallet",
@@ -504,6 +515,7 @@ var walletDelete = &cli.Command{
 	},
 }
 
+// 子命令：与市场余额互动
 var walletMarket = &cli.Command{
 	Name:  "market",
 	Usage: "Interact with market balances",
@@ -513,6 +525,7 @@ var walletMarket = &cli.Command{
 	},
 }
 
+// 子命令：从存储市场参与者提取资金
 var walletMarketWithdraw = &cli.Command{
 	Name:      "withdraw",
 	Usage:     "Withdraw funds from the Storage Market Actor",
@@ -618,6 +631,7 @@ var walletMarketWithdraw = &cli.Command{
 	},
 }
 
+// 子命令：向存储市场参与者添加资金
 var walletMarketAdd = &cli.Command{
 	Name:      "add",
 	Usage:     "Add funds to the Storage Market Actor",

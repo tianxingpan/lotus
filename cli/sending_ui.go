@@ -45,6 +45,7 @@ func InteractiveSend(ctx context.Context, cctx *cli.Context, srv ServicesAPI,
 	return msg, nil
 }
 
+// 交互式解决方案
 var interactiveSolves = map[api.CheckStatusCode]bool{
 	api.CheckStatusMessageMinBaseFee:        true,
 	api.CheckStatusMessageBaseFee:           true,
@@ -52,6 +53,7 @@ var interactiveSolves = map[api.CheckStatusCode]bool{
 	api.CheckStatusMessageBaseFeeUpperBound: true,
 }
 
+// 来自提示的基本费用
 func baseFeeFromHints(hint map[string]interface{}) big.Int {
 	bHint, ok := hint["baseFee"]
 	if !ok {
@@ -70,15 +72,16 @@ func baseFeeFromHints(hint map[string]interface{}) big.Int {
 	return baseFee
 }
 
+// 解决检查（支票）
 func resolveChecks(ctx context.Context, s ServicesAPI, printer io.Writer,
 	proto *api.MessagePrototype, checkGroups [][]api.MessageCheckStatus,
 ) (*api.MessagePrototype, error) {
 
-	fmt.Fprintf(printer, "Following checks have failed:\n")
+	_, _ = fmt.Fprintf(printer, "Following checks have failed:\n")
 	printChecks(printer, checkGroups, proto.Message.Cid())
 
 	if feeCapBad, baseFee := isFeeCapProblem(checkGroups, proto.Message.Cid()); feeCapBad {
-		fmt.Fprintf(printer, "Fee of the message can be adjusted\n")
+		_, _ = fmt.Fprintf(printer, "Fee of the message can be adjusted\n")
 		if askUser(printer, "Do you wish to do that? [Yes/no]: ", true) {
 			var err error
 			proto, err = runFeeCapAdjustmentUI(proto, baseFee)
@@ -90,7 +93,7 @@ func resolveChecks(ctx context.Context, s ServicesAPI, printer io.Writer,
 		if err != nil {
 			return nil, err
 		}
-		fmt.Fprintf(printer, "Following checks still failed:\n")
+		_, _ = fmt.Fprintf(printer, "Following checks still failed:\n")
 		printChecks(printer, checks, proto.Message.Cid())
 	}
 
@@ -102,6 +105,7 @@ func resolveChecks(ctx context.Context, s ServicesAPI, printer io.Writer,
 
 var ErrAbortedByUser = errors.New("aborted by user")
 
+// 打印支票
 func printChecks(printer io.Writer, checkGroups [][]api.MessageCheckStatus, protoCid cid.Cid) {
 	for _, checks := range checkGroups {
 		for _, c := range checks {
@@ -113,15 +117,16 @@ func printChecks(printer io.Writer, checkGroups [][]api.MessageCheckStatus, prot
 			if !aboutProto {
 				msgName = c.Cid.String()
 			}
-			fmt.Fprintf(printer, "%s message failed a check %s: %s\n", msgName, c.Code, c.Err)
+			_, _ = fmt.Fprintf(printer, "%s message failed a check %s: %s\n", msgName, c.Code, c.Err)
 		}
 	}
 }
 
+// 询问用户
 func askUser(printer io.Writer, q string, def bool) bool {
 	var resp string
-	fmt.Fprint(printer, q)
-	fmt.Scanln(&resp)
+	_, _ = fmt.Fprint(printer, q)
+	_, _ = fmt.Scanln(&resp)
 	resp = strings.ToLower(resp)
 	if len(resp) == 0 {
 		return def
@@ -129,6 +134,7 @@ func askUser(printer io.Writer, q string, def bool) bool {
 	return resp[0] == 'y'
 }
 
+// 是否费用上限有问题
 func isFeeCapProblem(checkGroups [][]api.MessageCheckStatus, protoCid cid.Cid) (bool, big.Int) {
 	baseFee := big.Zero()
 	yes := false
@@ -154,6 +160,7 @@ func isFeeCapProblem(checkGroups [][]api.MessageCheckStatus, protoCid cid.Cid) (
 	return yes, baseFee
 }
 
+// 运行费用上限调整界面
 func runFeeCapAdjustmentUI(proto *api.MessagePrototype, baseFee abi.TokenAmount) (*api.MessagePrototype, error) {
 	t, err := imtui.NewTui()
 	if err != nil {
@@ -177,6 +184,7 @@ func runFeeCapAdjustmentUI(proto *api.MessagePrototype, baseFee abi.TokenAmount)
 	return proto, nil
 }
 
+// 费用用户界面
 func feeUI(baseFee abi.TokenAmount, gasLimit int64, maxFee *abi.TokenAmount, send *bool) func(*imtui.Tui) error {
 	orignalMaxFee := *maxFee
 	required := big.Mul(baseFee, big.NewInt(gasLimit))

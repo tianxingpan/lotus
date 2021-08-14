@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// 命令：查询版本
 var VersionCmd = &cli.Command{
 	Name:  "version",
 	Usage: "Print version",

@@ -19,12 +19,14 @@ import (
 )
 
 // Set the global default, to be overridden by individual cli flags in order
+// 设置全局默认值，按顺序由各个 cli 标志覆盖
 func init() {
 	color.NoColor = os.Getenv("GOLOG_LOG_FMT") != "color" &&
 		!isatty.IsTerminal(os.Stdout.Fd()) &&
 		!isatty.IsCygwinTerminal(os.Stdout.Fd())
 }
 
+// 解析提示集
 func parseTipSet(ctx context.Context, api v0api.FullNode, vals []string) (*types.TipSet, error) {
 	var headers []*types.BlockHeader
 	for _, c := range vals {

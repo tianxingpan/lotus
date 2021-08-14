@@ -16,6 +16,7 @@ import (
 	"github.com/filecoin-project/lotus/build"
 )
 
+// 命令：检查链条同步器或与链条同步器交互
 var SyncCmd = &cli.Command{
 	Name:  "sync",
 	Usage: "Inspect or interact with the chain syncer",
@@ -29,6 +30,7 @@ var SyncCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查同步状态
 var SyncStatusCmd = &cli.Command{
 	Name:  "status",
 	Usage: "check sync status",
@@ -82,6 +84,7 @@ var SyncStatusCmd = &cli.Command{
 	},
 }
 
+// 子命令：等待同步完成
 var SyncWaitCmd = &cli.Command{
 	Name:  "wait",
 	Usage: "Wait for sync to be complete",
@@ -103,6 +106,7 @@ var SyncWaitCmd = &cli.Command{
 	},
 }
 
+// 子命令：将给定的块标记为坏块，将阻止同步到包含它的链
 var SyncMarkBadCmd = &cli.Command{
 	Name:      "mark-bad",
 	Usage:     "Mark the given block as bad, will prevent syncing to a chain that contains it",
@@ -128,6 +132,7 @@ var SyncMarkBadCmd = &cli.Command{
 	},
 }
 
+// 子命令：取消将给定块标记为坏块，从而可以同步到包含它的链
 var SyncUnmarkBadCmd = &cli.Command{
 	Name:  "unmark-bad",
 	Usage: "Unmark the given block as bad, makes it possible to sync to a chain containing it",
@@ -163,6 +168,7 @@ var SyncUnmarkBadCmd = &cli.Command{
 	},
 }
 
+// 子命令：检查给定的块是否被标记为错误，以及出于什么原因
 var SyncCheckBadCmd = &cli.Command{
 	Name:      "check-bad",
 	Usage:     "check if the given block was marked bad, and for what reason",
@@ -199,6 +205,7 @@ var SyncCheckBadCmd = &cli.Command{
 	},
 }
 
+// 子命令：将某个提示集标记为检查点；节点永远不会离开这个tipset
 var SyncCheckpointCmd = &cli.Command{
 	Name:      "checkpoint",
 	Usage:     "mark a certain tipset as checkpointed; the node will never fork away from this tipset",
@@ -241,8 +248,9 @@ var SyncCheckpointCmd = &cli.Command{
 	},
 }
 
+// 同步等待
 func SyncWait(ctx context.Context, napi v0api.FullNode, watch bool) error {
-	tick := time.Second / 4
+	tick := time.Second / 4		// 每次等待1/4秒
 
 	lastLines := 0
 	ticker := time.NewTicker(tick)
