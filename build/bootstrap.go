@@ -15,9 +15,11 @@ import (
 var bootstrapfs embed.FS
 
 func BuiltinBootstrap() ([]peer.AddrInfo, error) {
+	// 是否禁止内部资产
 	if DisableBuiltinAssets {
 		return nil, nil
 	}
+	// 引导程序文件
 	if BootstrappersFile != "" {
 		spi, err := bootstrapfs.ReadFile(path.Join("bootstrap", BootstrappersFile))
 		if err != nil {
