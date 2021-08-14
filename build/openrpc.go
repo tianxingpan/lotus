@@ -12,6 +12,7 @@ import (
 //go:embed openrpc
 var openrpcfs embed.FS
 
+// 必须读取Gzip方式打开的 RPC 文档
 func mustReadGzippedOpenRPCDocument(data []byte) apitypes.OpenRPCDocument {
 	zr, err := gzip.NewReader(bytes.NewBuffer(data))
 	if err != nil {
@@ -29,6 +30,7 @@ func mustReadGzippedOpenRPCDocument(data []byte) apitypes.OpenRPCDocument {
 	return m
 }
 
+// 打开RPC
 func OpenRPCDiscoverJSON_Full() apitypes.OpenRPCDocument {
 	data, err := openrpcfs.ReadFile("openrpc/full.json.gz")
 	if err != nil {
