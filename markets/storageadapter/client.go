@@ -1,6 +1,7 @@
 package storageadapter
 
 // this file implements storagemarket.StorageClientNode
+// 这个文件实现了 storagemarket.StorageClientNode（存储客户端节点）
 
 import (
 	"bytes"
@@ -35,6 +36,7 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/helpers"
 )
 
+// 客户端节点适配器
 type ClientNodeAdapter struct {
 	*clientApi
 
@@ -44,12 +46,14 @@ type ClientNodeAdapter struct {
 	scMgr     *SectorCommittedManager
 }
 
+// 客户端API
 type clientApi struct {
 	full.ChainAPI
 	full.StateAPI
 	full.MpoolAPI
 }
 
+// 新客户端节点适配器
 func NewClientNodeAdapter(mctx helpers.MetricsCtx, lc fx.Lifecycle, stateapi full.StateAPI, chain full.ChainAPI, mpool full.MpoolAPI, fundmgr *market.FundManager) storagemarket.StorageClientNode {
 	capi := &clientApi{chain, stateapi, mpool}
 	ctx := helpers.LifecycleCtx(mctx, lc)
@@ -66,6 +70,7 @@ func NewClientNodeAdapter(mctx helpers.MetricsCtx, lc fx.Lifecycle, stateapi ful
 	return a
 }
 
+// 列出存储提供者
 func (c *ClientNodeAdapter) ListStorageProviders(ctx context.Context, encodedTs shared.TipSetToken) ([]*storagemarket.StorageProviderInfo, error) {
 	tsk, err := types.TipSetKeyFromBytes(encodedTs)
 	if err != nil {
@@ -91,6 +96,7 @@ func (c *ClientNodeAdapter) ListStorageProviders(ctx context.Context, encodedTs 
 	return out, nil
 }
 
+// 验证签名
 func (c *ClientNodeAdapter) VerifySignature(ctx context.Context, sig crypto.Signature, addr address.Address, input []byte, encodedTs shared.TipSetToken) (bool, error) {
 	addr, err := c.StateAccountKey(ctx, addr, types.EmptyTSK)
 	if err != nil {
@@ -102,6 +108,7 @@ func (c *ClientNodeAdapter) VerifySignature(ctx context.Context, sig crypto.Sign
 }
 
 // Adds funds with the StorageMinerActor for a storage participant.  Used by both providers and clients.
+// 使用 StorageMinerActor 为存储参与者添加资金。供提供者和客户使用。
 func (c *ClientNodeAdapter) AddFunds(ctx context.Context, addr address.Address, amount abi.TokenAmount) (cid.Cid, error) {
 	// (Provider Node API)
 	smsg, err := c.MpoolPushMessage(ctx, &types.Message{
@@ -117,14 +124,17 @@ func (c *ClientNodeAdapter) AddFunds(ctx context.Context, addr address.Address, 
 	return smsg.Cid(), nil
 }
 
+// 储备基金
 func (c *ClientNodeAdapter) ReserveFunds(ctx context.Context, wallet, addr address.Address, amt abi.TokenAmount) (cid.Cid, error) {
 	return c.fundmgr.Reserve(ctx, wallet, addr, amt)
 }
 
+// 发行基金
 func (c *ClientNodeAdapter) ReleaseFunds(ctx context.Context, addr address.Address, amt abi.TokenAmount) error {
 	return c.fundmgr.Release(addr, amt)
 }
 
+// 获取余额
 func (c *ClientNodeAdapter) GetBalance(ctx context.Context, addr address.Address, encodedTs shared.TipSetToken) (storagemarket.Balance, error) {
 	tsk, err := types.TipSetKeyFromBytes(encodedTs)
 	if err != nil {
@@ -141,7 +151,9 @@ func (c *ClientNodeAdapter) GetBalance(ctx context.Context, addr address.Address
 
 // ValidatePublishedDeal validates that the provided deal has appeared on chain and references the same ClientDeal
 // returns the Deal id if there is no error
-// TODO: Don't return deal ID
+// ValidatePublishedDeal 验证提供的交易是否已出现在链上并引用相同的 ClientDeal
+// 如果没有错误，则返回交易ID
+// TODO: Don't return deal ID 不要返回交易 ID
 func (c *ClientNodeAdapter) ValidatePublishedDeal(ctx context.Context, deal storagemarket.ClientDeal) (abi.DealID, error) {
 	log.Infow("DEAL ACCEPTED!")
 
@@ -228,6 +240,7 @@ var clientOverestimation = struct {
 	denominator: 10,
 }
 
+// 交易提供商抵押品限
 func (c *ClientNodeAdapter) DealProviderCollateralBounds(ctx context.Context, size abi.PaddedPieceSize, isVerified bool) (abi.TokenAmount, abi.TokenAmount, error) {
 	bounds, err := c.StateDealProviderCollateralBounds(ctx, size, isVerified, types.EmptyTSK)
 	if err != nil {
@@ -240,6 +253,7 @@ func (c *ClientNodeAdapter) DealProviderCollateralBounds(ctx context.Context, si
 }
 
 // TODO: Remove dealID parameter, change publishCid to be cid.Cid (instead of pointer)
+// 在交易部门预先提交
 func (c *ClientNodeAdapter) OnDealSectorPreCommitted(ctx context.Context, provider address.Address, dealID abi.DealID, proposal market2.DealProposal, publishCid *cid.Cid, cb storagemarket.DealSectorPreCommittedCallback) error {
 	return c.scMgr.OnDealSectorPreCommitted(ctx, provider, marketactor.DealProposal(proposal), *publishCid, cb)
 }
@@ -262,19 +276,23 @@ func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID a
 	}
 
 	// Called immediately to check if the deal has already expired or been slashed
+	// 立即调用以检查交易是否已经过期或被削减
 	checkFunc := func(ts *types.TipSet) (done bool, more bool, err error) {
 		if ts == nil {
 			// keep listening for events
+			// 继续监听事件
 			return false, true, nil
 		}
 
 		// Check if the deal has already expired
+		// 检查交易是否已经过期检查交易是否已经过期
 		if sd.Proposal.EndEpoch <= ts.Height() {
 			onDealExpired(nil)
 			return true, false, nil
 		}
 
 		// If there is no deal assume it's already been slashed
+		// 如果没有交易，假设它已经被削减了
 		if sd.State.SectorStartEpoch < 0 {
 			onDealSlashed(ts.Height(), nil)
 			return true, false, nil
@@ -282,19 +300,23 @@ func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID a
 
 		// No events have occurred yet, so return
 		// done: false, more: true (keep listening for events)
+		// 还没有发生任何事件，所以返回
 		return false, true, nil
 	}
 
 	// Called when there was a match against the state change we're looking for
 	// and the chain has advanced to the confidence height
+	// 当与我们正在寻找的状态变化相匹配并且链已前进到置信度高度时调用
 	stateChanged := func(ts *types.TipSet, ts2 *types.TipSet, states events.StateChange, h abi.ChainEpoch) (more bool, err error) {
 		// Check if the deal has already expired
+		// 检查交易是否已经过期
 		if ts2 == nil || sd.Proposal.EndEpoch <= ts2.Height() {
 			onDealExpired(nil)
 			return false, nil
 		}
 
 		// Timeout waiting for state change
+		// 等待状态改变超时
 		if states == nil {
 			log.Error("timed out waiting for deal expiry")
 			return false, nil
@@ -308,10 +330,12 @@ func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID a
 		deal, ok := changedDeals[dealID]
 		if !ok {
 			// No change to deal
+			// 交易无变化
 			return true, nil
 		}
 
 		// Deal was slashed
+		// 交易被削减
 		if deal.To == nil {
 			onDealSlashed(ts2.Height(), nil)
 			return false, nil

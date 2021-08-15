@@ -63,6 +63,7 @@ func (a *MpoolAPI) MpoolSelect(ctx context.Context, tsk types.TipSetKey, ticketQ
 	return a.Mpool.SelectMessages(ctx, ts, ticketQuality)
 }
 
+// Mpool待处理
 func (a *MpoolAPI) MpoolPending(ctx context.Context, tsk types.TipSetKey) ([]*types.SignedMessage, error) {
 	ts, err := a.Chain.GetTipSetFromKey(tsk)
 	if err != nil {
@@ -87,6 +88,8 @@ func (a *MpoolAPI) MpoolPending(ctx context.Context, tsk types.TipSetKey) ([]*ty
 
 			// different blocks in tipsets of the same height
 			// we exclude messages that have been included in blocks in the mpool tipset
+			// 相同高度的tipsets中的不同块
+			// 我们排除已包含在 mpool 提示集中块中的消息
 			have, err := a.Mpool.MessagesForBlocks(mpts.Blocks())
 			if err != nil {
 				return nil, xerrors.Errorf("getting messages for base ts: %w", err)
@@ -122,19 +125,23 @@ func (a *MpoolAPI) MpoolPending(ctx context.Context, tsk types.TipSetKey) ([]*ty
 	}
 }
 
+// Mpool清除
 func (a *MpoolAPI) MpoolClear(ctx context.Context, local bool) error {
 	a.Mpool.Clear(ctx, local)
 	return nil
 }
 
+// Mpool推送
 func (m *MpoolModule) MpoolPush(ctx context.Context, smsg *types.SignedMessage) (cid.Cid, error) {
 	return m.Mpool.Push(ctx, smsg)
 }
 
+// Mpool推送不可信
 func (a *MpoolAPI) MpoolPushUntrusted(ctx context.Context, smsg *types.SignedMessage) (cid.Cid, error) {
 	return a.Mpool.PushUntrusted(ctx, smsg)
 }
 
+// Mpool推送消息
 func (a *MpoolAPI) MpoolPushMessage(ctx context.Context, msg *types.Message, spec *api.MessageSendSpec) (*types.SignedMessage, error) {
 	cp := *msg
 	msg = &cp

@@ -59,6 +59,7 @@ type Events struct {
 	observers []TipSetObserver
 }
 
+// 有把握对新事件
 func NewEventsWithConfidence(ctx context.Context, api EventAPI, gcConfidence abi.ChainEpoch) *Events {
 	tsc := newTSCache(gcConfidence, api)
 
@@ -85,6 +86,7 @@ func NewEventsWithConfidence(ctx context.Context, api EventAPI, gcConfidence abi
 	go e.listenHeadChanges(ctx)
 
 	// Wait for the first tipset to be seen or bail if shutting down
+	// 等待第一个提示集出现或在关闭时保释
 	select {
 	case <-e.ready:
 	case <-ctx.Done():
@@ -93,11 +95,13 @@ func NewEventsWithConfidence(ctx context.Context, api EventAPI, gcConfidence abi
 	return e
 }
 
+// 新的事件
 func NewEvents(ctx context.Context, api EventAPI) *Events {
 	gcConfidence := 2 * build.ForkLengthThreshold
 	return NewEventsWithConfidence(ctx, api, gcConfidence)
 }
 
+// 监听同步变化
 func (e *Events) listenHeadChanges(ctx context.Context) {
 	for {
 		if err := e.listenHeadChangesOnce(ctx); err != nil {

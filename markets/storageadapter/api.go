@@ -15,7 +15,9 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// api包装器
 type apiWrapper struct {
+	// 定义API接口
 	api interface {
 		StateGetActor(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*types.Actor, error)
 		ChainReadObj(context.Context, cid.Cid) ([]byte, error)
@@ -23,6 +25,7 @@ type apiWrapper struct {
 	}
 }
 
+// 差异预提交
 func (ca *apiWrapper) diffPreCommits(ctx context.Context, actor address.Address, pre, cur types.TipSetKey) (*miner.PreCommitChanges, error) {
 	store := adt.WrapStore(ctx, cbor.NewCborStore(blockstore.NewAPIBlockstore(ca.api)))
 
