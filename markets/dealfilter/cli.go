@@ -12,6 +12,7 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
+// 客户端存储交易过滤器
 func CliStorageDealFilter(cmd string) dtypes.StorageDealFilter {
 	return func(ctx context.Context, deal storagemarket.MinerDeal) (bool, string, error) {
 		d := struct {
@@ -25,6 +26,7 @@ func CliStorageDealFilter(cmd string) dtypes.StorageDealFilter {
 	}
 }
 
+// 客户端检索交易过滤器
 func CliRetrievalDealFilter(cmd string) dtypes.RetrievalDealFilter {
 	return func(ctx context.Context, deal retrievalmarket.ProviderDealState) (bool, string, error) {
 		d := struct {
@@ -38,6 +40,7 @@ func CliRetrievalDealFilter(cmd string) dtypes.RetrievalDealFilter {
 	}
 }
 
+// 运行交易过滤器
 func runDealFilter(ctx context.Context, cmd string, deal interface{}) (bool, string, error) {
 	j, err := json.MarshalIndent(deal, "", "  ")
 	if err != nil {

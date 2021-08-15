@@ -14,7 +14,9 @@ import (
 )
 
 // Distribution
+// 默认毫秒分布
 var defaultMillisecondsDistribution = view.Distribution(0.01, 0.05, 0.1, 0.3, 0.6, 0.8, 1, 2, 3, 4, 5, 6, 8, 10, 13, 16, 20, 25, 30, 40, 50, 65, 80, 100, 130, 160, 200, 250, 300, 400, 500, 650, 800, 1000, 2000, 3000, 4000, 5000, 7500, 10000, 20000, 50000, 100000)
+// 工作毫秒分布
 var workMillisecondsDistribution = view.Distribution(
 	250, 500, 1000, 2000, 5000, 10_000, 30_000, 60_000, 2*60_000, 5*60_000, 10*60_000, 15*60_000, 30*60_000, // short sealing tasks
 	40*60_000, 45*60_000, 50*60_000, 55*60_000, 60*60_000, 65*60_000, 70*60_000, 75*60_000, 80*60_000, 85*60_000, 100*60_000, 120*60_000, // PC2 / C2 range
@@ -321,6 +323,7 @@ var (
 )
 
 // DefaultViews is an array of OpenCensus views for metric gathering purposes
+// DefaultViews 是一组用于度量收集目的的 OpenCensus 视图
 var DefaultViews = func() []*view.View {
 	views := []*view.View{
 		InfoView,
@@ -382,12 +385,14 @@ var MinerNodeViews = append([]*view.View{
 }, DefaultViews...)
 
 // SinceInMilliseconds returns the duration of time since the provide time as a float64.
+// SinceInMillionSeconds将自提供时间以来的持续时间返回为浮点64。
 func SinceInMilliseconds(startTime time.Time) float64 {
 	return float64(time.Since(startTime).Nanoseconds()) / 1e6
 }
 
 // Timer is a function stopwatch, calling it starts the timer,
 // calling the returned function will record the duration.
+// Timer 是一个函数秒表，调用它启动定时器，调用返回的函数会记录持续时间。
 func Timer(ctx context.Context, m *stats.Float64Measure) func() {
 	start := time.Now()
 	return func() {

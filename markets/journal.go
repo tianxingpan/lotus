@@ -28,6 +28,7 @@ type RetrievalProviderEvt struct {
 }
 
 // StorageClientJournaler records journal events from the storage client.
+// StorageClientJournaler 记录来自存储客户端的日志事件。
 func StorageClientJournaler(j journal.Journal, evtType journal.EventType) func(event storagemarket.ClientEvent, deal storagemarket.ClientDeal) {
 	return func(event storagemarket.ClientEvent, deal storagemarket.ClientDeal) {
 		j.RecordEvent(evtType, func() interface{} {
@@ -40,6 +41,7 @@ func StorageClientJournaler(j journal.Journal, evtType journal.EventType) func(e
 }
 
 // StorageProviderJournaler records journal events from the storage provider.
+// StorageProviderJournaler 记录来自存储提供程序的日志事件。
 func StorageProviderJournaler(j journal.Journal, evtType journal.EventType) func(event storagemarket.ProviderEvent, deal storagemarket.MinerDeal) {
 	return func(event storagemarket.ProviderEvent, deal storagemarket.MinerDeal) {
 		j.RecordEvent(evtType, func() interface{} {
@@ -52,6 +54,7 @@ func StorageProviderJournaler(j journal.Journal, evtType journal.EventType) func
 }
 
 // RetrievalClientJournaler records journal events from the retrieval client.
+// RetrievalClientJournaler 记录来自检索客户端的日志事件。
 func RetrievalClientJournaler(j journal.Journal, evtType journal.EventType) func(event retrievalmarket.ClientEvent, deal retrievalmarket.ClientDealState) {
 	return func(event retrievalmarket.ClientEvent, deal retrievalmarket.ClientDealState) {
 		j.RecordEvent(evtType, func() interface{} {
@@ -64,6 +67,7 @@ func RetrievalClientJournaler(j journal.Journal, evtType journal.EventType) func
 }
 
 // RetrievalProviderJournaler records journal events from the retrieval provider.
+// RetrievalProviderJournaler 记录来自检索提供程序的日志事件。
 func RetrievalProviderJournaler(j journal.Journal, evtType journal.EventType) func(event retrievalmarket.ProviderEvent, deal retrievalmarket.ProviderDealState) {
 	return func(event retrievalmarket.ProviderEvent, deal retrievalmarket.ProviderDealState) {
 		j.RecordEvent(evtType, func() interface{} {

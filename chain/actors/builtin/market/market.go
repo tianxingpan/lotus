@@ -177,7 +177,7 @@ type DealState struct {
 type DealProposal struct {
 	PieceCID             cid.Cid
 	PieceSize            abi.PaddedPieceSize
-	VerifiedDeal         bool
+	VerifiedDeal         bool					// 已验证交易
 	Client               address.Address
 	Provider             address.Address
 	Label                string

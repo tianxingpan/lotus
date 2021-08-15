@@ -1000,9 +1000,10 @@ type MarketBalance struct {
 	Locked big.Int
 }
 
+// 市场交易
 type MarketDeal struct {
-	Proposal market.DealProposal
-	State    market.DealState
+	Proposal market.DealProposal	// 交易提案
+	State    market.DealState		// 交易状态
 }
 
 type RetrievalOrder struct {

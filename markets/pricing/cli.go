@@ -11,12 +11,14 @@ import (
 	"golang.org/x/xerrors"
 )
 
+// 外部检索定价函数
 func ExternalRetrievalPricingFunc(cmd string) dtypes.RetrievalPricingFunc {
 	return func(ctx context.Context, pricingInput retrievalmarket.PricingInput) (retrievalmarket.Ask, error) {
 		return runPricingFunc(ctx, cmd, pricingInput)
 	}
 }
 
+// 运行定价函数
 func runPricingFunc(_ context.Context, cmd string, params interface{}) (retrievalmarket.Ask, error) {
 	j, err := json.Marshal(params)
 	if err != nil {

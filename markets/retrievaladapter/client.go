@@ -16,14 +16,16 @@ import (
 	payapi "github.com/filecoin-project/lotus/node/impl/paych"
 )
 
+// 检索客户端节点
 type retrievalClientNode struct {
-	chainAPI full.ChainAPI
-	payAPI   payapi.PaychAPI
-	stateAPI full.StateAPI
+	chainAPI full.ChainAPI		// 链API
+	payAPI   payapi.PaychAPI	// 支付API
+	stateAPI full.StateAPI		// 状态API
 }
 
 // NewRetrievalClientNode returns a new node adapter for a retrieval client that talks to the
 // Lotus Node
+// NewRetrievalClientNode 为与 Lotus 节点对话的检索客户端返回一个新的节点适配器
 func NewRetrievalClientNode(payAPI payapi.PaychAPI, chainAPI full.ChainAPI, stateAPI full.StateAPI) retrievalmarket.RetrievalClientNode {
 	return &retrievalClientNode{payAPI: payAPI, chainAPI: chainAPI, stateAPI: stateAPI}
 }
@@ -31,6 +33,7 @@ func NewRetrievalClientNode(payAPI payapi.PaychAPI, chainAPI full.ChainAPI, stat
 // GetOrCreatePaymentChannel sets up a new payment channel if one does not exist
 // between a client and a miner and ensures the client has the given amount of
 // funds available in the channel.
+// GetOrCreatePaymentChannel 如果客户和矿工之间不存在新的支付渠道，则建立一个新的支付渠道，并确保客户在渠道中拥有给定数量的可用资金。
 func (rcn *retrievalClientNode) GetOrCreatePaymentChannel(ctx context.Context, clientAddress address.Address, minerAddress address.Address, clientFundsAvailable abi.TokenAmount, tok shared.TipSetToken) (address.Address, cid.Cid, error) {
 	// TODO: respect the provided TipSetToken (a serialized TipSetKey) when
 	// querying the chain
@@ -44,6 +47,7 @@ func (rcn *retrievalClientNode) GetOrCreatePaymentChannel(ctx context.Context, c
 // Allocate late creates a lane within a payment channel so that calls to
 // CreatePaymentVoucher will automatically make vouchers only for the difference
 // in total
+// 分配延迟在支付渠道中创建一条通道，以便调用CreatePaymentVoucher 将仅针对总差额自动制作凭证
 func (rcn *retrievalClientNode) AllocateLane(ctx context.Context, paymentChannel address.Address) (uint64, error) {
 	return rcn.payAPI.PaychAllocateLane(ctx, paymentChannel)
 }
