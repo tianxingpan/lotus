@@ -1,6 +1,7 @@
 package storageadapter
 
 // this file implements storagemarket.StorageProviderNode
+// 这个文件实现了 storagemarket.StorageProviderNode
 
 import (
 	"context"
@@ -37,21 +38,23 @@ import (
 	"github.com/filecoin-project/lotus/storage/sectorblocks"
 )
 
-var addPieceRetryWait = 5 * time.Minute
-var addPieceRetryTimeout = 6 * time.Hour
-var defaultMaxProviderCollateralMultiplier = uint64(2)
+var addPieceRetryWait = 5 * time.Minute		// 添加Piece重试等待，5分钟
+var addPieceRetryTimeout = 6 * time.Hour	// 添加Piece重试超时时间， 6小时
+var defaultMaxProviderCollateralMultiplier = uint64(2)		// 默认最大提供者抵押乘数
 var log = logging.Logger("storageadapter")
 
+// 提供者节点适配器
 type ProviderNodeAdapter struct {
 	v1api.FullNode
 
 	// this goes away with the data transfer module
+	// 这随着数据传输模块而消失
 	dag dtypes.StagingDAG
 
 	secb *sectorblocks.SectorBlocks
 	ev   *events.Events
 
-	dealPublisher *DealPublisher
+	dealPublisher *DealPublisher	// 交易发布者
 
 	addBalanceSpec              *api.MessageSendSpec
 	maxDealCollateralMultiplier uint64
@@ -59,6 +62,7 @@ type ProviderNodeAdapter struct {
 	scMgr                       *SectorCommittedManager
 }
 
+// 新提供者节点适配器
 func NewProviderNodeAdapter(fc *config.MinerFeeConfig, dc *config.DealmakingConfig) func(mctx helpers.MetricsCtx, lc fx.Lifecycle, dag dtypes.StagingDAG, secb *sectorblocks.SectorBlocks, full v1api.FullNode, dealPublisher *DealPublisher) storagemarket.StorageProviderNode {
 	return func(mctx helpers.MetricsCtx, lc fx.Lifecycle, dag dtypes.StagingDAG, secb *sectorblocks.SectorBlocks, full v1api.FullNode, dealPublisher *DealPublisher) storagemarket.StorageProviderNode {
 		ctx := helpers.LifecycleCtx(mctx, lc)
@@ -86,15 +90,18 @@ func NewProviderNodeAdapter(fc *config.MinerFeeConfig, dc *config.DealmakingConf
 	}
 }
 
+// 发布交易
 func (n *ProviderNodeAdapter) PublishDeals(ctx context.Context, deal storagemarket.MinerDeal) (cid.Cid, error) {
 	return n.dealPublisher.Publish(ctx, deal.ClientDealProposal)
 }
 
+// 成为交易
 func (n *ProviderNodeAdapter) OnDealComplete(ctx context.Context, deal storagemarket.MinerDeal, pieceSize abi.UnpaddedPieceSize, pieceData io.Reader) (*storagemarket.PackingResult, error) {
 	if deal.PublishCid == nil {
 		return nil, xerrors.Errorf("deal.PublishCid can't be nil")
 	}
 
+	// 是交易标识及其时间表的元组
 	sdInfo := api.PieceDealInfo{
 		DealID:       deal.DealID,
 		DealProposal: &deal.Proposal,
@@ -110,6 +117,7 @@ func (n *ProviderNodeAdapter) OnDealComplete(ctx context.Context, deal storagema
 	curTime := time.Now()
 	for time.Since(curTime) < addPieceRetryTimeout {
 		if !xerrors.Is(err, sealing.ErrTooManySectorsSealing) {
+			// 密封的扇区太多
 			if err != nil {
 				log.Errorf("failed to addPiece for deal %d, err: %v", deal.DealID, err)
 			}
@@ -117,8 +125,10 @@ func (n *ProviderNodeAdapter) OnDealComplete(ctx context.Context, deal storagema
 		}
 		select {
 		case <-time.After(addPieceRetryWait):
+			// 添加Piece重试等待，5分钟
 			p, offset, err = n.secb.AddPiece(ctx, pieceSize, pieceData, sdInfo)
 		case <-ctx.Done():
+			// 等待重试 AddPiece 时上下文已过期
 			return nil, xerrors.New("context expired while waiting to retry AddPiece")
 		}
 	}
@@ -135,6 +145,7 @@ func (n *ProviderNodeAdapter) OnDealComplete(ctx context.Context, deal storagema
 	}, nil
 }
 
+// 验证签名
 func (n *ProviderNodeAdapter) VerifySignature(ctx context.Context, sig crypto.Signature, addr address.Address, input []byte, encodedTs shared.TipSetToken) (bool, error) {
 	addr, err := n.StateAccountKey(ctx, addr, types.EmptyTSK)
 	if err != nil {
@@ -145,6 +156,7 @@ func (n *ProviderNodeAdapter) VerifySignature(ctx context.Context, sig crypto.Si
 	return err == nil, err
 }
 
+// 获取矿工地址
 func (n *ProviderNodeAdapter) GetMinerWorkerAddress(ctx context.Context, maddr address.Address, tok shared.TipSetToken) (address.Address, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -158,6 +170,7 @@ func (n *ProviderNodeAdapter) GetMinerWorkerAddress(ctx context.Context, maddr a
 	return mi.Worker, nil
 }
 
+// 获取证明类型
 func (n *ProviderNodeAdapter) GetProofType(ctx context.Context, maddr address.Address, tok shared.TipSetToken) (abi.RegisteredSealProof, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -177,6 +190,7 @@ func (n *ProviderNodeAdapter) GetProofType(ctx context.Context, maddr address.Ad
 	return miner.PreferredSealProofTypeFromWindowPoStType(nver, mi.WindowPoStProofType)
 }
 
+// 签名字节
 func (n *ProviderNodeAdapter) SignBytes(ctx context.Context, signer address.Address, b []byte) (*crypto.Signature, error) {
 	signer, err := n.StateAccountKey(ctx, signer, types.EmptyTSK)
 	if err != nil {
@@ -190,15 +204,18 @@ func (n *ProviderNodeAdapter) SignBytes(ctx context.Context, signer address.Addr
 	return localSignature, nil
 }
 
+// 储备基金
 func (n *ProviderNodeAdapter) ReserveFunds(ctx context.Context, wallet, addr address.Address, amt abi.TokenAmount) (cid.Cid, error) {
 	return n.MarketReserveFunds(ctx, wallet, addr, amt)
 }
 
+// 发行基金
 func (n *ProviderNodeAdapter) ReleaseFunds(ctx context.Context, addr address.Address, amt abi.TokenAmount) error {
 	return n.MarketReleaseFunds(ctx, addr, amt)
 }
 
 // Adds funds with the StorageMinerActor for a storage participant.  Used by both providers and clients.
+// 使用 StorageMinerActor 为存储参与者添加资金。供提供者和客户使用。
 func (n *ProviderNodeAdapter) AddFunds(ctx context.Context, addr address.Address, amount abi.TokenAmount) (cid.Cid, error) {
 	// (Provider Node API)
 	smsg, err := n.MpoolPushMessage(ctx, &types.Message{
@@ -214,6 +231,7 @@ func (n *ProviderNodeAdapter) AddFunds(ctx context.Context, addr address.Address
 	return smsg.Cid(), nil
 }
 
+// 获取余额
 func (n *ProviderNodeAdapter) GetBalance(ctx context.Context, addr address.Address, encodedTs shared.TipSetToken) (storagemarket.Balance, error) {
 	tsk, err := types.TipSetKeyFromBytes(encodedTs)
 	if err != nil {
@@ -229,6 +247,8 @@ func (n *ProviderNodeAdapter) GetBalance(ctx context.Context, addr address.Addre
 }
 
 // TODO: why doesnt this method take in a sector ID?
+// TODO: 为什么这种方法不接受扇区 ID？
+// 找到行业内的交易对象
 func (n *ProviderNodeAdapter) LocatePieceForDealWithinSector(ctx context.Context, dealID abi.DealID, encodedTs shared.TipSetToken) (sectorID abi.SectorNumber, offset abi.PaddedPieceSize, length abi.PaddedPieceSize, err error) {
 	refs, err := n.secb.GetRefs(dealID)
 	if err != nil {
@@ -239,6 +259,7 @@ func (n *ProviderNodeAdapter) LocatePieceForDealWithinSector(ctx context.Context
 	}
 
 	// TODO: better strategy (e.g. look for already unsealed)
+	// TODO: 更好的策略（例如，寻找已经打开的/解封的）
 	var best api.SealedRef
 	var bestSi api.SectorInfo
 	for _, r := range refs {
@@ -258,6 +279,7 @@ func (n *ProviderNodeAdapter) LocatePieceForDealWithinSector(ctx context.Context
 	return best.SectorID, best.Offset, best.Size.Padded(), nil
 }
 
+// 交易提供商抵押品限制
 func (n *ProviderNodeAdapter) DealProviderCollateralBounds(ctx context.Context, size abi.PaddedPieceSize, isVerified bool) (abi.TokenAmount, abi.TokenAmount, error) {
 	bounds, err := n.StateDealProviderCollateralBounds(ctx, size, isVerified, types.EmptyTSK)
 	if err != nil {
@@ -266,21 +288,25 @@ func (n *ProviderNodeAdapter) DealProviderCollateralBounds(ctx context.Context, 
 
 	// The maximum amount of collateral that the provider will put into escrow
 	// for a deal is calculated as a multiple of the minimum bounded amount
+	// 提供商为交易而托管的最大抵押品金额计算为最小有界金额的倍数
 	max := types.BigMul(bounds.Min, types.NewInt(n.maxDealCollateralMultiplier))
 
 	return bounds.Min, max, nil
 }
 
 // TODO: Remove dealID parameter, change publishCid to be cid.Cid (instead of pointer)
+// TODO: 移除 dealID 参数，将 publishCid 更改为 cid.Cid（而不是指针）
 func (n *ProviderNodeAdapter) OnDealSectorPreCommitted(ctx context.Context, provider address.Address, dealID abi.DealID, proposal market2.DealProposal, publishCid *cid.Cid, cb storagemarket.DealSectorPreCommittedCallback) error {
 	return n.scMgr.OnDealSectorPreCommitted(ctx, provider, market.DealProposal(proposal), *publishCid, cb)
 }
 
 // TODO: Remove dealID parameter, change publishCid to be cid.Cid (instead of pointer)
+// TODO: 移除 dealID 参数，将 publishCid 更改为 cid.Cid（而不是指针）
 func (n *ProviderNodeAdapter) OnDealSectorCommitted(ctx context.Context, provider address.Address, dealID abi.DealID, sectorNumber abi.SectorNumber, proposal market2.DealProposal, publishCid *cid.Cid, cb storagemarket.DealSectorCommittedCallback) error {
 	return n.scMgr.OnDealSectorCommitted(ctx, provider, sectorNumber, market.DealProposal(proposal), *publishCid, cb)
 }
 
+// 获取链头
 func (n *ProviderNodeAdapter) GetChainHead(ctx context.Context) (shared.TipSetToken, abi.ChainEpoch, error) {
 	head, err := n.ChainHead(ctx)
 	if err != nil {
@@ -290,6 +316,7 @@ func (n *ProviderNodeAdapter) GetChainHead(ctx context.Context) (shared.TipSetTo
 	return head.Key().Bytes(), head.Height(), nil
 }
 
+// 等待消息
 func (n *ProviderNodeAdapter) WaitForMessage(ctx context.Context, mcid cid.Cid, cb func(code exitcode.ExitCode, bytes []byte, finalCid cid.Cid, err error) error) error {
 	receipt, err := n.StateWaitMsg(ctx, mcid, 2*build.MessageConfidence, api.LookbackNoLimit, true)
 	if err != nil {
@@ -298,8 +325,10 @@ func (n *ProviderNodeAdapter) WaitForMessage(ctx context.Context, mcid cid.Cid, 
 	return cb(receipt.Receipt.ExitCode, receipt.Receipt.Return, receipt.Message, nil)
 }
 
+// 等待发布交易
 func (n *ProviderNodeAdapter) WaitForPublishDeals(ctx context.Context, publishCid cid.Cid, proposal market2.DealProposal) (*storagemarket.PublishDealsWaitResult, error) {
 	// Wait for deal to be published (plus additional time for confidence)
+	// 等待交易发布（加上额外的时间来增强信心）
 	receipt, err := n.StateWaitMsg(ctx, publishCid, 2*build.MessageConfidence, api.LookbackNoLimit, true)
 	if err != nil {
 		return nil, xerrors.Errorf("WaitForPublishDeals errored: %w", err)
@@ -310,29 +339,35 @@ func (n *ProviderNodeAdapter) WaitForPublishDeals(ctx context.Context, publishCi
 
 	// The deal ID may have changed since publish if there was a reorg, so
 	// get the current deal ID
+	// 如果有重组，交易 ID 可能自发布以来已更改，因此获取当前交易 ID
 	head, err := n.ChainHead(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("WaitForPublishDeals failed to get chain head: %w", err)
 	}
 
+	// 获取当前交易信息
 	res, err := n.scMgr.dealInfo.GetCurrentDealInfo(ctx, head.Key().Bytes(), (*market.DealProposal)(&proposal), publishCid)
 	if err != nil {
 		return nil, xerrors.Errorf("WaitForPublishDeals getting deal info errored: %w", err)
 	}
 
+	// 发布交易，等待结果
 	return &storagemarket.PublishDealsWaitResult{DealID: res.DealID, FinalCid: receipt.Message}, nil
 }
 
+// 获取数据上限
 func (n *ProviderNodeAdapter) GetDataCap(ctx context.Context, addr address.Address, encodedTs shared.TipSetToken) (*abi.StoragePower, error) {
 	tsk, err := types.TipSetKeyFromBytes(encodedTs)
 	if err != nil {
 		return nil, err
 	}
 
+	// 状态验证客户端状态
 	sp, err := n.StateVerifiedClientStatus(ctx, addr, tsk)
 	return sp, err
 }
 
+// 交易到期或削减
 func (n *ProviderNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID abi.DealID, onDealExpired storagemarket.DealExpiredCallback, onDealSlashed storagemarket.DealSlashedCallback) error {
 	head, err := n.ChainHead(ctx)
 	if err != nil {
@@ -345,19 +380,23 @@ func (n *ProviderNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID
 	}
 
 	// Called immediately to check if the deal has already expired or been slashed
+	// 立即调用以检查交易是否已经过期或被削减
 	checkFunc := func(ts *types.TipSet) (done bool, more bool, err error) {
 		if ts == nil {
 			// keep listening for events
+			// 继续监听事件
 			return false, true, nil
 		}
 
 		// Check if the deal has already expired
+		// 检查交易是否已经过期
 		if sd.Proposal.EndEpoch <= ts.Height() {
 			onDealExpired(nil)
 			return true, false, nil
 		}
 
 		// If there is no deal assume it's already been slashed
+		// 如果没有交易，假设它已经被削减了
 		if sd.State.SectorStartEpoch < 0 {
 			onDealSlashed(ts.Height(), nil)
 			return true, false, nil
@@ -365,19 +404,23 @@ func (n *ProviderNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID
 
 		// No events have occurred yet, so return
 		// done: false, more: true (keep listening for events)
+		// 还没有发生任何事件，所以返回
 		return false, true, nil
 	}
 
 	// Called when there was a match against the state change we're looking for
 	// and the chain has advanced to the confidence height
+	// 当与我们正在寻找的状态变化相匹配并且链已前进到置信度高度时调用
 	stateChanged := func(ts *types.TipSet, ts2 *types.TipSet, states events.StateChange, h abi.ChainEpoch) (more bool, err error) {
 		// Check if the deal has already expired
+		// 检查交易是否已经过期
 		if ts2 == nil || sd.Proposal.EndEpoch <= ts2.Height() {
 			onDealExpired(nil)
 			return false, nil
 		}
 
 		// Timeout waiting for state change
+		// 等待状态改变超时
 		if states == nil {
 			log.Error("timed out waiting for deal expiry")
 			return false, nil
@@ -391,10 +434,12 @@ func (n *ProviderNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID
 		deal, ok := changedDeals[dealID]
 		if !ok {
 			// No change to deal
+			// 交易无变化
 			return true, nil
 		}
 
 		// Deal was slashed
+		// 交易被削减
 		if deal.To == nil {
 			onDealSlashed(ts2.Height(), nil)
 			return false, nil
@@ -404,16 +449,20 @@ func (n *ProviderNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID
 	}
 
 	// Called when there was a chain reorg and the state change was reverted
+	// 当发生链重组并且状态更改被还原时调用
 	revert := func(ctx context.Context, ts *types.TipSet) error {
 		// TODO: Is it ok to just ignore this?
+		// TODO: 忽略这一点可以吗？
 		log.Warn("deal state reverted; TODO: actually handle this!")
 		return nil
 	}
 
 	// Watch for state changes to the deal
+	// 注意交易的状态变化
 	match := n.dsMatcher.matcher(ctx, dealID)
 
 	// Wait until after the end epoch for the deal and then timeout
+	// 等到交易结束后，然后超时
 	timeout := (sd.Proposal.EndEpoch - head.Height()) + 1
 	if err := n.ev.StateChanged(checkFunc, stateChanged, revert, int(build.MessageConfidence)+1, timeout, match); err != nil {
 		return xerrors.Errorf("failed to set up state changed handler: %w", err)

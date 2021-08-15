@@ -22,6 +22,7 @@ import (
 	"github.com/filecoin-project/lotus/node/modules/dtypes"
 )
 
+// 密封序列化
 type SealSerialization uint8
 
 const (
@@ -32,12 +33,14 @@ var dsPrefix = datastore.NewKey("/sealedblocks")
 
 var ErrNotFound = errors.New("not found")
 
+// 交易ID转DsKey
 func DealIDToDsKey(dealID abi.DealID) datastore.Key {
 	buf := make([]byte, binary.MaxVarintLen64)
 	size := binary.PutUvarint(buf, uint64(dealID))
 	return dshelp.NewKeyFromBinary(buf[:size])
 }
 
+// DsKey转交易ID
 func DsKeyToDealID(key datastore.Key) (uint64, error) {
 	buf, err := dshelp.BinaryFromDsKey(key)
 	if err != nil {
@@ -47,11 +50,13 @@ func DsKeyToDealID(key datastore.Key) (uint64, error) {
 	return dealID, nil
 }
 
+// 扇区构建器，定义了接口
 type SectorBuilder interface {
 	SectorAddPieceToAny(ctx context.Context, size abi.UnpaddedPieceSize, r storage.Data, d api.PieceDealInfo) (api.SectorOffset, error)
 	SectorsStatus(ctx context.Context, sid abi.SectorNumber, showOnChainInfo bool) (api.SectorInfo, error)
 }
 
+// 扇区块
 type SectorBlocks struct {
 	SectorBuilder
 
@@ -59,6 +64,7 @@ type SectorBlocks struct {
 	keyLk sync.Mutex
 }
 
+// 新扇区块
 func NewSectorBlocks(sb SectorBuilder, ds dtypes.MetadataDS) *SectorBlocks {
 	sbc := &SectorBlocks{
 		SectorBuilder: sb,

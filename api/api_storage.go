@@ -266,11 +266,13 @@ type SealedRefs struct {
 	Refs []SealedRef
 }
 
+//密封票据
 type SealTicket struct {
 	Value abi.SealRandomness
 	Epoch abi.ChainEpoch
 }
 
+// 密封种子
 type SealSeed struct {
 	Value abi.InteractiveSealRandomness
 	Epoch abi.ChainEpoch
@@ -309,18 +311,21 @@ type AddressConfig struct {
 
 // PendingDealInfo has info about pending deals and when they are due to be
 // published
+// PendingDealInfo 包含有关待定交易以及它们何时发布的信息
 type PendingDealInfo struct {
 	Deals              []market.ClientDealProposal
 	PublishPeriodStart time.Time
 	PublishPeriod      time.Duration
 }
 
+// 扇区偏移
 type SectorOffset struct {
 	Sector abi.SectorNumber
 	Offset abi.PaddedPieceSize
 }
 
 // DealInfo is a tuple of deal identity and its schedule
+// DealInfo 是交易标识及其时间表的元组
 type PieceDealInfo struct {
 	PublishCid   *cid.Cid
 	DealID       abi.DealID
@@ -332,6 +337,7 @@ type PieceDealInfo struct {
 // DealSchedule communicates the time interval of a storage deal. The deal must
 // appear in a sealed (proven) sector no later than StartEpoch, otherwise it
 // is invalid.
+// DealSchedule 传达存储交易的时间间隔。交易必须在不迟于 StartEpoch 的密封（已证明）扇区中出现，否则无效。
 type DealSchedule struct {
 	StartEpoch abi.ChainEpoch
 	EndEpoch   abi.ChainEpoch
