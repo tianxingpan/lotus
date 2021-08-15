@@ -52,9 +52,10 @@ const (
 // whether we mined a block in this round or not.
 type waitFunc func(ctx context.Context, baseTime uint64) (func(bool, abi.ChainEpoch, error), abi.ChainEpoch, error)
 
+// 随机时间偏移
 func randTimeOffset(width time.Duration) time.Duration {
 	buf := make([]byte, 8)
-	rand.Reader.Read(buf) //nolint:errcheck
+	_, _ = rand.Reader.Read(buf) //nolint:errcheck
 	val := time.Duration(binary.BigEndian.Uint64(buf) % uint64(width))
 
 	return val - (width / 2)
@@ -62,6 +63,8 @@ func randTimeOffset(width time.Duration) time.Duration {
 
 // NewMiner instantiates a miner with a concrete WinningPoStProver and a miner
 // address (which can be different from the worker's address).
+// NewMiner 使用具体的 WinningPoStProver 和矿工地址（可以与工人的地址不同）实例化矿工。
+// 创建新的矿工
 func NewMiner(api v1api.FullNode, epp gen.WinningPoStProver, addr address.Address, sf *slashfilter.SlashFilter, j journal.Journal) *Miner {
 	arc, err := lru.NewARC(10000)
 	if err != nil {
@@ -131,6 +134,7 @@ type Miner struct {
 }
 
 // Address returns the address of the miner.
+// Address 返回矿工的地址。
 func (m *Miner) Address() address.Address {
 	m.lk.Lock()
 	defer m.lk.Unlock()
@@ -140,6 +144,7 @@ func (m *Miner) Address() address.Address {
 
 // Start starts the mining operation. It spawns a goroutine and returns
 // immediately. Start is not idempotent.
+// Start 开始挖矿操作。它生成一个 goroutine 并立即返回。开始不是幂等的。
 func (m *Miner) Start(_ context.Context) error {
 	m.lk.Lock()
 	defer m.lk.Unlock()
@@ -153,6 +158,7 @@ func (m *Miner) Start(_ context.Context) error {
 
 // Stop stops the mining operation. It is not idempotent, and multiple adjacent
 // calls to Stop will fail.
+// Stop 停止挖矿操作。它不是幂等的，多个相邻的 Stop 调用会失败。
 func (m *Miner) Stop(ctx context.Context) error {
 	m.lk.Lock()
 
@@ -175,6 +181,7 @@ func (m *Miner) niceSleep(d time.Duration) bool {
 	case <-build.Clock.After(d):
 		return true
 	case <-m.stop:
+		// 在挖矿周期中尝试睡眠时收到中断
 		log.Infow("received interrupt while trying to sleep in mining cycle")
 		return false
 	}
@@ -202,6 +209,16 @@ func (m *Miner) niceSleep(d time.Duration) bool {
 //      were eligible to mine, we will receive their blocks via gossipsub and
 //      we will select that tipset on the next iteration of the loop, thus
 //      discarding our null round.
+// 矿山运行采矿循环。它执行以下操作:
+// 1.  查询我们当前最知名的挖矿候选者（基于tipset）。
+// 2.  等待网络传播延迟过去（当前为 6 秒）。等待是相对于最佳候选者的时间戳完成的，
+// 	   这意味着如果它是过去的方式，我们根本不会等待（例如在追赶或匆忙挖掘中）。
+// 3.  等待之后，我们查询我们最好的挖掘候选者。这将是我们将与之合作的人。
+// 4.  健全性检查我们_实际上_有一个新的采矿基地可以开采。如果不是，则等待一个 epoch + 传播延迟，然后返回顶部。
+// 5.  我们尝试通过调用 mineOne（参考 godocs）来挖掘一个区块。如果我们有资格开采，则此方法将返回一个块，否则将返回 nil。
+// 6a. 如果我们挖掘了一个区块，我们会更新我们的状态并通过 gossipsub 将其推送到网络。
+// 6b. 如果我们没有开采一个区块，我们认为这是我们选择的采矿基地之上的一个零轮。如果网络上的其他矿工或矿工有资格挖掘，我们
+//     将通过 gossipsub 接收他们的块，我们将在循环的下一次迭代中选择该提示集，从而丢弃我们的空轮。
 func (m *Miner) mine(ctx context.Context) {
 	ctx, span := trace.StartSpan(ctx, "/mine")
 	defer span.End()
@@ -366,6 +383,8 @@ minerLoop:
 
 // MiningBase is the tipset on top of which we plan to construct our next block.
 // Refer to godocs on GetBestMiningCandidate.
+// MiningBase 是我们计划在其上构建下一个区块的tipset。
+// 请参阅 GetBestMiningCandidate 上的 godocs。
 type MiningBase struct {
 	TipSet     *types.TipSet
 	NullRounds abi.ChainEpoch
@@ -377,6 +396,9 @@ type MiningBase struct {
 // It obtains the current chain head (HEAD), and compares it to the last tipset
 // we selected as our mining base (LAST). If HEAD's weight is larger than
 // LAST's weight, it selects HEAD to build on. Else, it selects LAST.
+// GetBestMiningCandidate 从矿工的角度实施分叉选择规则。
+// 它获取当前链头 (HEAD)，并将其与我们选择作为挖矿基础 (LAST) 的最后一个提示集进行比较。
+// 如果 HEAD 的权重大于 LAST 的权重，则选择 HEAD 进行构建。否则，它选择 LAST。
 func (m *Miner) GetBestMiningCandidate(ctx context.Context) (*MiningBase, error) {
 	m.lk.Lock()
 	defer m.lk.Unlock()
@@ -420,6 +442,8 @@ func (m *Miner) GetBestMiningCandidate(ctx context.Context) (*MiningBase, error)
 // This method does the following:
 //
 //  1.
+// mineOne 尝试挖掘单个区块，并且当且仅当我们有资格挖掘时同步进行。
+// {hint/landmark}：该方法协调挖掘一个区块所涉及的所有步骤，包括根据我们是否赢得这一轮来确定是否挖掘的条件。
 func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *types.BlockMsg, err error) {
 	log.Debugw("attempting to mine a block", "tipset", types.LogCids(base.TipSet.Cids()))
 	tStart := build.Clock.Now()
@@ -579,6 +603,7 @@ func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *type
 	return minedBlock, nil
 }
 
+// 电脑票据
 func (m *Miner) computeTicket(ctx context.Context, brand *types.BeaconEntry, base *MiningBase, mbi *api.MiningBaseInfo) (*types.Ticket, error) {
 	buf := new(bytes.Buffer)
 	if err := m.address.MarshalCBOR(buf); err != nil {
@@ -605,6 +630,7 @@ func (m *Miner) computeTicket(ctx context.Context, brand *types.BeaconEntry, bas
 	}, nil
 }
 
+// 创建块
 func (m *Miner) createBlock(base *MiningBase, addr address.Address, ticket *types.Ticket,
 	eproof *types.ElectionProof, bvals []types.BeaconEntry, wpostProof []proof2.PoStProof, msgs []*types.SignedMessage) (*types.BlockMsg, error) {
 	uts := base.TipSet.MinTimestamp() + build.BlockDelaySecs*(uint64(base.NullRounds)+1)

@@ -56,6 +56,7 @@ const LookbackNoLimit = abi.ChainEpoch(-1)
 //  * Generate openrpc blobs
 
 // FullNode API is a low-level interface to the Filecoin network full node
+// FullNode API 是 Filecoin 网络全节点的低级接口
 type FullNode interface {
 	Common
 	Net
@@ -66,20 +67,27 @@ type FullNode interface {
 
 	// ChainNotify returns channel with chain head updates.
 	// First message is guaranteed to be of len == 1, and type == 'current'.
+	// ChainNotify 返回带有链头更新的通道。
+	// 第一条消息保证为 len == 1，type == 'current'。
 	ChainNotify(context.Context) (<-chan []*HeadChange, error) //perm:read
 
 	// ChainHead returns the current head of the chain.
+	// ChainHead 返回链的当前头。
 	ChainHead(context.Context) (*types.TipSet, error) //perm:read
 
 	// ChainGetRandomnessFromTickets is used to sample the chain for randomness.
+	// ChainGetRandomnessFromTickets 用于对链进行采样以获得随机性。
 	ChainGetRandomnessFromTickets(ctx context.Context, tsk types.TipSetKey, personalization crypto.DomainSeparationTag, randEpoch abi.ChainEpoch, entropy []byte) (abi.Randomness, error) //perm:read
 
 	// ChainGetRandomnessFromBeacon is used to sample the beacon for randomness.
+	// ChainGetRandomnessFromBeacon 用于对信标进行随机采样。
 	ChainGetRandomnessFromBeacon(ctx context.Context, tsk types.TipSetKey, personalization crypto.DomainSeparationTag, randEpoch abi.ChainEpoch, entropy []byte) (abi.Randomness, error) //perm:read
 
 	// ChainGetBlock returns the block specified by the given CID.
+	// ChainGetBlock 返回由给定 CID 指定的块。
 	ChainGetBlock(context.Context, cid.Cid) (*types.BlockHeader, error) //perm:read
 	// ChainGetTipSet returns the tipset specified by the given TipSetKey.
+	// ChainGetTipSet 返回由给定 TipSetKey 指定的提示集。
 	ChainGetTipSet(context.Context, types.TipSetKey) (*types.TipSet, error) //perm:read
 
 	// ChainGetBlockMessages returns messages stored in the specified block.
@@ -94,52 +102,68 @@ type FullNode interface {
 	//
 	// DO NOT USE THIS METHOD TO GET MESSAGES INCLUDED IN A TIPSET
 	// Use ChainGetParentMessages, which will perform correct message deduplication
+	// ChainGetBlockMessages 返回存储在指定块中的消息。
 	ChainGetBlockMessages(ctx context.Context, blockCid cid.Cid) (*BlockMessages, error) //perm:read
 
 	// ChainGetParentReceipts returns receipts for messages in parent tipset of
 	// the specified block. The receipts in the list returned is one-to-one with the
 	// messages returned by a call to ChainGetParentMessages with the same blockCid.
+	// ChainGetParentReceipts 返回指定块的父提示集中消息的回执。返回的列表中的回执与调用 ChainGetParentMessages
+	// 返回的消息一一对应，具有相同的 blockCid。
 	ChainGetParentReceipts(ctx context.Context, blockCid cid.Cid) ([]*types.MessageReceipt, error) //perm:read
 
 	// ChainGetParentMessages returns messages stored in parent tipset of the
 	// specified block.
+	// ChainGetParentMessages 返回存储在指定块的父提示集中的消息。
 	ChainGetParentMessages(ctx context.Context, blockCid cid.Cid) ([]Message, error) //perm:read
 
 	// ChainGetMessagesInTipset returns message stores in current tipset
+	// ChainGetMessagesInTipset 返回当前提示集中的消息存储
 	ChainGetMessagesInTipset(ctx context.Context, tsk types.TipSetKey) ([]Message, error) //perm:read
 
 	// ChainGetTipSetByHeight looks back for a tipset at the specified epoch.
 	// If there are no blocks at the specified epoch, a tipset at an earlier epoch
 	// will be returned.
+	// ChainGetTipSetByHeight 在指定的 epoch 回溯寻找一个tipset。
+	// 如果在指定时期没有区块，则将返回较早时期的提示集。
 	ChainGetTipSetByHeight(context.Context, abi.ChainEpoch, types.TipSetKey) (*types.TipSet, error) //perm:read
 
 	// ChainReadObj reads ipld nodes referenced by the specified CID from chain
 	// blockstore and returns raw bytes.
+	// ChainReadObj 从链块存储中读取指定 CID 引用的 ipld 节点并返回原始字节。
 	ChainReadObj(context.Context, cid.Cid) ([]byte, error) //perm:read
 
 	// ChainDeleteObj deletes node referenced by the given CID
+	// ChainDeleteObj 删除给定 CID 引用的节点
 	ChainDeleteObj(context.Context, cid.Cid) error //perm:admin
 
 	// ChainHasObj checks if a given CID exists in the chain blockstore.
+	// ChainHasObj 检查链块存储中是否存在给定的 CID。
 	ChainHasObj(context.Context, cid.Cid) (bool, error) //perm:read
 
 	// ChainStatObj returns statistics about the graph referenced by 'obj'.
 	// If 'base' is also specified, then the returned stat will be a diff
 	// between the two objects.
+	// ChainStatObj 返回有关 'obj' 引用的图的统计信息。
+	// 如果还指定了 'base'，则返回的 stat 将是两个对象之间的差异。
 	ChainStatObj(ctx context.Context, obj cid.Cid, base cid.Cid) (ObjStat, error) //perm:read
 
 	// ChainSetHead forcefully sets current chain head. Use with caution.
+	// ChainSetHead 强制设置当前链头。谨慎使用。
 	ChainSetHead(context.Context, types.TipSetKey) error //perm:admin
 
 	// ChainGetGenesis returns the genesis tipset.
+	// ChainGetGenesis 返回创世提示集。
 	ChainGetGenesis(context.Context) (*types.TipSet, error) //perm:read
 
 	// ChainTipSetWeight computes weight for the specified tipset.
+	// ChainTipSetWeight 计算指定提示集的权重。
 	ChainTipSetWeight(context.Context, types.TipSetKey) (types.BigInt, error) //perm:read
 	ChainGetNode(ctx context.Context, p string) (*IpldObject, error)          //perm:read
 
 	// ChainGetMessage reads a message referenced by the specified CID from the
 	// chain blockstore.
+	// ChainGetMessage 从链块存储中读取指定 CID 引用的消息。
 	ChainGetMessage(context.Context, cid.Cid) (*types.Message, error) //perm:read
 
 	// ChainGetPath returns a set of revert/apply operations needed to get from
@@ -155,6 +179,7 @@ type FullNode interface {
 	//     tRR
 	//```
 	// Would return `[revert(tBA), apply(tAB), apply(tAA)]`
+	// ChainGetPath 返回一组从一个提示集到另一个提示集所需的还原/应用操作，例如：
 	ChainGetPath(ctx context.Context, from types.TipSetKey, to types.TipSetKey) ([]*HeadChange, error) //perm:read
 
 	// ChainExport returns a stream of bytes with CAR dump of chain data.
@@ -162,6 +187,7 @@ type FullNode interface {
 	// back to genesis, the entire genesis state, and the most recent 'nroots'
 	// state trees.
 	// If oldmsgskip is set, messages from before the requested roots are also not included.
+	// ChainExport 返回一个字节流，其中包含链数据的 CAR 转储。
 	ChainExport(ctx context.Context, nroots abi.ChainEpoch, oldmsgskip bool, tsk types.TipSetKey) (<-chan []byte, error) //perm:read
 
 	// ChainCheckBlockstore performs an (asynchronous) health check on the chain/state blockstore
@@ -421,54 +447,78 @@ type FullNode interface {
 	// nonce, params, etc.)
 	StateReplay(context.Context, types.TipSetKey, cid.Cid) (*InvocResult, error) //perm:read
 	// StateGetActor returns the indicated actor's nonce and balance.
+	// StateGetActor 返回指定参与者的随机数和余额。
 	StateGetActor(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*types.Actor, error) //perm:read
 	// StateReadState returns the indicated actor's state.
+	// StateReadState 返回指定角色的状态。
 	StateReadState(ctx context.Context, actor address.Address, tsk types.TipSetKey) (*ActorState, error) //perm:read
 	// StateListMessages looks back and returns all messages with a matching to or from address, stopping at the given height.
+	// StateListMessages 回顾并返回所有具有匹配到或来自地址的消息，并在给定的高度处停止。
 	StateListMessages(ctx context.Context, match *MessageMatch, tsk types.TipSetKey, toht abi.ChainEpoch) ([]cid.Cid, error) //perm:read
 	// StateDecodeParams attempts to decode the provided params, based on the recipient actor address and method number.
+	// StateDecodeParams 尝试根据接收者参与者地址和方法编号对提供的参数进行解码。
 	StateDecodeParams(ctx context.Context, toAddr address.Address, method abi.MethodNum, params []byte, tsk types.TipSetKey) (interface{}, error) //perm:read
 
 	// StateNetworkName returns the name of the network the node is synced to
+	// StateNetworkName 返回节点同步到的网络名称
 	StateNetworkName(context.Context) (dtypes.NetworkName, error) //perm:read
 	// StateMinerSectors returns info about the given miner's sectors. If the filter bitfield is nil, all sectors are included.
+	// StateMinerSectors 返回有关给定矿工扇区的信息。如果过滤器位域为零，则包括所有扇区。
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error) //perm:read
 	// StateMinerActiveSectors returns info about sectors that a given miner is actively proving.
+	// StateMinerActiveSectors 返回有关给定矿工正在积极证明的扇区的信息。
 	StateMinerActiveSectors(context.Context, address.Address, types.TipSetKey) ([]*miner.SectorOnChainInfo, error) //perm:read
 	// StateMinerProvingDeadline calculates the deadline at some epoch for a proving period
 	// and returns the deadline-related calculations.
+	// StateMinerProvingDeadline 计算证明期间某个时期的截止日期，并返回与截止日期相关的计算结果。
 	StateMinerProvingDeadline(context.Context, address.Address, types.TipSetKey) (*dline.Info, error) //perm:read
 	// StateMinerPower returns the power of the indicated miner
+	// StateMinerPower 返回指定矿工的功率
 	StateMinerPower(context.Context, address.Address, types.TipSetKey) (*MinerPower, error) //perm:read
 	// StateMinerInfo returns info about the indicated miner
+	// StateMinerInfo 返回有关指定矿工的信息
 	StateMinerInfo(context.Context, address.Address, types.TipSetKey) (miner.MinerInfo, error) //perm:read
 	// StateMinerDeadlines returns all the proving deadlines for the given miner
+	// StateMinerDeadlines 返回给定矿工的所有证明截止日期
 	StateMinerDeadlines(context.Context, address.Address, types.TipSetKey) ([]Deadline, error) //perm:read
 	// StateMinerPartitions returns all partitions in the specified deadline
+	// StateMinerPartitions 返回指定期限内的所有分区
 	StateMinerPartitions(ctx context.Context, m address.Address, dlIdx uint64, tsk types.TipSetKey) ([]Partition, error) //perm:read
 	// StateMinerFaults returns a bitfield indicating the faulty sectors of the given miner
+	// StateMinerFaults 返回一个位域，指示给定矿工的故障扇区
 	StateMinerFaults(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error) //perm:read
 	// StateAllMinerFaults returns all non-expired Faults that occur within lookback epochs of the given tipset
+	// StateAllMinerFaults 返回在给定提示集的回溯时期内发生的所有未过期故障
 	StateAllMinerFaults(ctx context.Context, lookback abi.ChainEpoch, ts types.TipSetKey) ([]*Fault, error) //perm:read
 	// StateMinerRecoveries returns a bitfield indicating the recovering sectors of the given miner
+	// StateMinerRecoveries 返回一个位域，指示给定矿工的恢复扇区
 	StateMinerRecoveries(context.Context, address.Address, types.TipSetKey) (bitfield.BitField, error) //perm:read
 	// StateMinerInitialPledgeCollateral returns the precommit deposit for the specified miner's sector
+	// StateMinerInitialPledgeCollat​​eral 返回指定矿工部门的预提交保证金
 	StateMinerPreCommitDepositForPower(context.Context, address.Address, miner.SectorPreCommitInfo, types.TipSetKey) (types.BigInt, error) //perm:read
 	// StateMinerInitialPledgeCollateral returns the initial pledge collateral for the specified miner's sector
+	// StateMinerInitialPledgeCollat​​eral 返回指定矿工部门的初始质押抵押品
 	StateMinerInitialPledgeCollateral(context.Context, address.Address, miner.SectorPreCommitInfo, types.TipSetKey) (types.BigInt, error) //perm:read
 	// StateMinerAvailableBalance returns the portion of a miner's balance that can be withdrawn or spent
+	// StateMinerAvailableBalance 返回矿工余额中可以提取或花费的部分
 	StateMinerAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error) //perm:read
 	// StateMinerSectorAllocated checks if a sector is allocated
+	// StateMinerSectorAllocated 检查扇区是否已分配
 	StateMinerSectorAllocated(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (bool, error) //perm:read
 	// StateSectorPreCommitInfo returns the PreCommit info for the specified miner's sector
+	// StateSectorPreCommitInfo 返回指定矿工扇区的预提交信息
 	StateSectorPreCommitInfo(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (miner.SectorPreCommitOnChainInfo, error) //perm:read
 	// StateSectorGetInfo returns the on-chain info for the specified miner's sector. Returns null in case the sector info isn't found
 	// NOTE: returned info.Expiration may not be accurate in some cases, use StateSectorExpiration to get accurate
 	// expiration epoch
+	// StateSectorGetInfo 返回指定矿工扇区的链上信息。如果找不到扇区信息，则返回 null
+	// 注意：返回的 info.Expiration 在某些情况下可能不准确，请使用 StateSectorExpiration 获取准确的到期时间
 	StateSectorGetInfo(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (*miner.SectorOnChainInfo, error) //perm:read
 	// StateSectorExpiration returns epoch at which given sector will expire
+	// StateSectorExpiration 返回给定扇区将到期的纪元
 	StateSectorExpiration(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (*miner.SectorExpiration, error) //perm:read
 	// StateSectorPartition finds deadline/partition with the specified sector
+	// StateSectorPartition 查找具有指定扇区的截止日期/分区
 	StateSectorPartition(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok types.TipSetKey) (*miner.SectorLocation, error) //perm:read
 	// StateSearchMsg looks back up to limit epochs in the chain for a message, and returns its receipt and the tipset where it was executed
 	//
@@ -486,6 +536,7 @@ type FullNode interface {
 	// A replacing message is a message with a different CID, any of Gas values, and
 	// different signature, but with all other parameters matching (source/destination,
 	// nonce, params, etc.)
+	// StateSearchMsg 回溯以限制消息链中的纪元，并返回其收据和执行它的提示集
 	StateSearchMsg(ctx context.Context, from types.TipSetKey, msg cid.Cid, limit abi.ChainEpoch, allowReplaced bool) (*MsgLookup, error) //perm:read
 	// StateWaitMsg looks back up to limit epochs in the chain for a message.
 	// If not found, it blocks until the message arrives on chain, and gets to the
@@ -505,27 +556,38 @@ type FullNode interface {
 	// A replacing message is a message with a different CID, any of Gas values, and
 	// different signature, but with all other parameters matching (source/destination,
 	// nonce, params, etc.)
+	// StateWaitMsg 回溯以限制消息链中的纪元。
 	StateWaitMsg(ctx context.Context, cid cid.Cid, confidence uint64, limit abi.ChainEpoch, allowReplaced bool) (*MsgLookup, error) //perm:read
 	// StateListMiners returns the addresses of every miner that has claimed power in the Power Actor
+	// StateListMiners 返回每个在 Power Actor 中声称拥有权力的矿工的地址
 	StateListMiners(context.Context, types.TipSetKey) ([]address.Address, error) //perm:read
 	// StateListActors returns the addresses of every actor in the state
+	// StateListActors 返回状态中每个参与者的地址
 	StateListActors(context.Context, types.TipSetKey) ([]address.Address, error) //perm:read
 	// StateMarketBalance looks up the Escrow and Locked balances of the given address in the Storage Market
+	// StateMarketBalance 在存储市场中查找给定地址的托管和锁定余额
 	StateMarketBalance(context.Context, address.Address, types.TipSetKey) (MarketBalance, error) //perm:read
 	// StateMarketParticipants returns the Escrow and Locked balances of every participant in the Storage Market
+	// StateMarketParticipants 返回存储市场中每个参与者的托管和锁定余额
 	StateMarketParticipants(context.Context, types.TipSetKey) (map[string]MarketBalance, error) //perm:read
 	// StateMarketDeals returns information about every deal in the Storage Market
+	// StateMarketDeals 返回有关存储市场中每笔交易的信息
 	StateMarketDeals(context.Context, types.TipSetKey) (map[string]MarketDeal, error) //perm:read
 	// StateMarketStorageDeal returns information about the indicated deal
+	// StateMarketStorageDeal 返回有关指定交易的信息
 	StateMarketStorageDeal(context.Context, abi.DealID, types.TipSetKey) (*MarketDeal, error) //perm:read
 	// StateLookupID retrieves the ID address of the given address
+	// StateLookupID 检索给定地址的 ID 地址
 	StateLookupID(context.Context, address.Address, types.TipSetKey) (address.Address, error) //perm:read
 	// StateAccountKey returns the public key address of the given ID address
+	// StateAccountKey 返回给定 ID 地址的公钥地址
 	StateAccountKey(context.Context, address.Address, types.TipSetKey) (address.Address, error) //perm:read
 	// StateChangedActors returns all the actors whose states change between the two given state CIDs
+	// StateChangedActors 返回状态在两个给定状态 CID 之间发生变化的所有参与者
 	// TODO: Should this take tipset keys instead?
 	StateChangedActors(context.Context, cid.Cid, cid.Cid) (map[string]types.Actor, error) //perm:read
 	// StateMinerSectorCount returns the number of sectors in a miner's sector set and proving set
+	// StateMinerSectorCount 返回矿工扇区集和证明集中的扇区数
 	StateMinerSectorCount(context.Context, address.Address, types.TipSetKey) (MinerSectors, error) //perm:read
 	// StateCompute is a flexible command that applies the given messages on the given tipset.
 	// The messages are run as though the VM were at the provided height.
@@ -559,28 +621,40 @@ type FullNode interface {
 	//
 	// Messages in the `apply` parameter must have the correct nonces, and gas
 	// values set.
+	// StateCompute 是一个灵活的命令，它在给定的提示集上应用给定的消息。
 	StateCompute(context.Context, abi.ChainEpoch, []*types.Message, types.TipSetKey) (*ComputeStateOutput, error) //perm:read
 	// StateVerifierStatus returns the data cap for the given address.
 	// Returns nil if there is no entry in the data cap table for the
 	// address.
+	// StateVerifierStatus 返回给定地址的数据上限。
+	// 如果地址的数据上限表中没有条目，则返回 nil。
 	StateVerifierStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error) //perm:read
 	// StateVerifiedClientStatus returns the data cap for the given address.
 	// Returns nil if there is no entry in the data cap table for the
 	// address.
+	// StateVerifiedClientStatus 返回给定地址的数据上限。
+	// 如果地址的数据上限表中没有条目，则返回 nil。
 	StateVerifiedClientStatus(ctx context.Context, addr address.Address, tsk types.TipSetKey) (*abi.StoragePower, error) //perm:read
 	// StateVerifiedClientStatus returns the address of the Verified Registry's root key
+	// StateVerifiedClientStatus 返回已验证注册表的根密钥的地址
 	StateVerifiedRegistryRootKey(ctx context.Context, tsk types.TipSetKey) (address.Address, error) //perm:read
 	// StateDealProviderCollateralBounds returns the min and max collateral a storage provider
 	// can issue. It takes the deal size and verified status as parameters.
+	// StateDealProviderCollat​​eralBounds 返回存储提供商可以发行的最小和最大抵押品。它将交易规模和验证状态作为参数。
 	StateDealProviderCollateralBounds(context.Context, abi.PaddedPieceSize, bool, types.TipSetKey) (DealCollateralBounds, error) //perm:read
 
 	// StateCirculatingSupply returns the exact circulating supply of Filecoin at the given tipset.
 	// This is not used anywhere in the protocol itself, and is only for external consumption.
+	// StateCirculatingSupply 在给定的提示集上返回 Filecoin 的确切循环供应量。
+	// 这不在协议本身的任何地方使用，仅用于外部消费。
 	StateCirculatingSupply(context.Context, types.TipSetKey) (abi.TokenAmount, error) //perm:read
 	// StateVMCirculatingSupplyInternal returns an approximation of the circulating supply of Filecoin at the given tipset.
 	// This is the value reported by the runtime interface to actors code.
+	// StateVMCirculatingSupplyInternal 返回给定提示集的 Filecoin 循环供应量的近似值。
+	// 这是运行时接口向参与者代码报告的值。
 	StateVMCirculatingSupplyInternal(context.Context, types.TipSetKey) (CirculatingSupply, error) //perm:read
 	// StateNetworkVersion returns the network version at the given tipset
+	// StateNetworkVersion 返回给定提示集的网络版本
 	StateNetworkVersion(context.Context, types.TipSetKey) (apitypes.NetworkVersion, error) //perm:read
 
 	// MethodGroup: Msig
@@ -588,30 +662,37 @@ type FullNode interface {
 	// filecoin network
 
 	// MsigGetAvailableBalance returns the portion of a multisig's balance that can be withdrawn or spent
+	// MsigGetAvailableBalance 返回可以提取或花费的多重签名余额部分
 	MsigGetAvailableBalance(context.Context, address.Address, types.TipSetKey) (types.BigInt, error) //perm:read
 	// MsigGetVestingSchedule returns the vesting details of a given multisig.
+	// MsigGetVestingSchedule 返回给定多重签名的归属细节。
 	MsigGetVestingSchedule(context.Context, address.Address, types.TipSetKey) (MsigVesting, error) //perm:read
 	// MsigGetVested returns the amount of FIL that vested in a multisig in a certain period.
 	// It takes the following params: <multisig address>, <start epoch>, <end epoch>
+	// MsigGetVested 返回特定时期内归属于多重签名的 FIL 数量。
 	MsigGetVested(context.Context, address.Address, types.TipSetKey, types.TipSetKey) (types.BigInt, error) //perm:read
 
 	//MsigGetPending returns pending transactions for the given multisig
 	//wallet. Once pending transactions are fully approved, they will no longer
 	//appear here.
+	//MsigGetPending 返回给定多重签名钱包的待处理交易。一旦待处理交易获得完全批准，它们将不再出现在此处。
 	MsigGetPending(context.Context, address.Address, types.TipSetKey) ([]*MsigTransaction, error) //perm:read
 
 	// MsigCreate creates a multisig wallet
 	// It takes the following params: <required number of senders>, <approving addresses>, <unlock duration>
 	//<initial balance>, <sender address of the create msg>, <gas price>
+	// MsigCreate 创建一个多重签名钱包
 	MsigCreate(context.Context, uint64, []address.Address, abi.ChainEpoch, types.BigInt, address.Address, types.BigInt) (*MessagePrototype, error) //perm:sign
 
 	// MsigPropose proposes a multisig message
 	// It takes the following params: <multisig address>, <recipient address>, <value to transfer>,
 	// <sender address of the propose msg>, <method to call in the proposed message>, <params to include in the proposed message>
+	// MsigPropose 提出多签消息
 	MsigPropose(context.Context, address.Address, address.Address, types.BigInt, address.Address, uint64, []byte) (*MessagePrototype, error) //perm:sign
 
 	// MsigApprove approves a previously-proposed multisig message by transaction ID
 	// It takes the following params: <multisig address>, <proposed transaction ID> <signer address>
+	// MsigApprove 通过交易 ID 批准先前提议的多重签名消息
 	MsigApprove(context.Context, address.Address, uint64, address.Address) (*MessagePrototype, error) //perm:sign
 
 	// MsigApproveTxnHash approves a previously-proposed multisig message, specified
@@ -620,41 +701,49 @@ type FullNode interface {
 	// exactly the transaction you think you are.
 	// It takes the following params: <multisig address>, <proposed message ID>, <proposer address>, <recipient address>, <value to transfer>,
 	// <sender address of the approve msg>, <method to call in the proposed message>, <params to include in the proposed message>
+	// MsigApproveTxnHash 批准先前提议的多重签名消息，该消息使用交易 ID 和提议中使用的参数的哈希值指定。这种批准方法可用于确保您只批准您认为的交易。
 	MsigApproveTxnHash(context.Context, address.Address, uint64, address.Address, address.Address, types.BigInt, address.Address, uint64, []byte) (*MessagePrototype, error) //perm:sign
 
 	// MsigCancel cancels a previously-proposed multisig message
 	// It takes the following params: <multisig address>, <proposed transaction ID>, <recipient address>, <value to transfer>,
 	// <sender address of the cancel msg>, <method to call in the proposed message>, <params to include in the proposed message>
+	// MsigCancel 取消先前提议的多签消息
 	MsigCancel(context.Context, address.Address, uint64, address.Address, types.BigInt, address.Address, uint64, []byte) (*MessagePrototype, error) //perm:sign
 
 	// MsigAddPropose proposes adding a signer in the multisig
 	// It takes the following params: <multisig address>, <sender address of the propose msg>,
 	// <new signer>, <whether the number of required signers should be increased>
+	// MsigAddPropose 提议在多重签名中添加签名者
 	MsigAddPropose(context.Context, address.Address, address.Address, address.Address, bool) (*MessagePrototype, error) //perm:sign
 
 	// MsigAddApprove approves a previously proposed AddSigner message
 	// It takes the following params: <multisig address>, <sender address of the approve msg>, <proposed message ID>,
 	// <proposer address>, <new signer>, <whether the number of required signers should be increased>
+	// MsigAddApprove 批准先前提议的 AddSigner 消息
 	MsigAddApprove(context.Context, address.Address, address.Address, uint64, address.Address, address.Address, bool) (*MessagePrototype, error) //perm:sign
 
 	// MsigAddCancel cancels a previously proposed AddSigner message
 	// It takes the following params: <multisig address>, <sender address of the cancel msg>, <proposed message ID>,
 	// <new signer>, <whether the number of required signers should be increased>
+	// MsigAddCancel 取消先前提议的 AddSigner 消息
 	MsigAddCancel(context.Context, address.Address, address.Address, uint64, address.Address, bool) (*MessagePrototype, error) //perm:sign
 
 	// MsigSwapPropose proposes swapping 2 signers in the multisig
 	// It takes the following params: <multisig address>, <sender address of the propose msg>,
 	// <old signer>, <new signer>
+	// MsigSwapPropose 提议在多重签名中交换 2 个签名者
 	MsigSwapPropose(context.Context, address.Address, address.Address, address.Address, address.Address) (*MessagePrototype, error) //perm:sign
 
 	// MsigSwapApprove approves a previously proposed SwapSigner
 	// It takes the following params: <multisig address>, <sender address of the approve msg>, <proposed message ID>,
 	// <proposer address>, <old signer>, <new signer>
+	// MsigSwapApprove 批准先前提议的 SwapSigner
 	MsigSwapApprove(context.Context, address.Address, address.Address, uint64, address.Address, address.Address, address.Address) (*MessagePrototype, error) //perm:sign
 
 	// MsigSwapCancel cancels a previously proposed SwapSigner message
 	// It takes the following params: <multisig address>, <sender address of the cancel msg>, <proposed message ID>,
 	// <old signer>, <new signer>
+	// MsigSwapCancel 取消先前提议的 SwapSigner 消息
 	MsigSwapCancel(context.Context, address.Address, address.Address, uint64, address.Address, address.Address) (*MessagePrototype, error) //perm:sign
 
 	// MsigRemoveSigner proposes the removal of a signer from the multisig.
@@ -662,17 +751,24 @@ type FullNode interface {
 	// send the message from, the address to be removed, and a boolean
 	// indicating whether or not the signing threshold should be lowered by one
 	// along with the address removal.
+	// MsigRemoveSigner 建议从多重签名中删除签名者。
+	// 它接受多重签名以进行更改、发送消息的提议者地址、要删除的地址以及指示签名阈值是否应随地址删除一起降低的布尔值。
 	MsigRemoveSigner(ctx context.Context, msig address.Address, proposer address.Address, toRemove address.Address, decrease bool) (*MessagePrototype, error) //perm:sign
 
 	// MarketAddBalance adds funds to the market actor
+	// MarketAddBalance 为市场参与者增加资金
 	MarketAddBalance(ctx context.Context, wallet, addr address.Address, amt types.BigInt) (cid.Cid, error) //perm:sign
 	// MarketGetReserved gets the amount of funds that are currently reserved for the address
+	// MarketGetReserved 获取当前为地址预留的资金量
 	MarketGetReserved(ctx context.Context, addr address.Address) (types.BigInt, error) //perm:sign
 	// MarketReserveFunds reserves funds for a deal
+	// MarketReserveFunds 为交易预留资金
 	MarketReserveFunds(ctx context.Context, wallet address.Address, addr address.Address, amt types.BigInt) (cid.Cid, error) //perm:sign
 	// MarketReleaseFunds releases funds reserved by MarketReserveFunds
+	// MarketReleaseFunds 释放 MarketReserveFunds 预留的资金
 	MarketReleaseFunds(ctx context.Context, addr address.Address, amt types.BigInt) error //perm:sign
 	// MarketWithdraw withdraws unlocked funds from the market actor
+	// MarketWithdraw 从市场参与者那里提取未锁定的资金
 	MarketWithdraw(ctx context.Context, wallet, addr address.Address, amt types.BigInt) (cid.Cid, error) //perm:sign
 
 	// MethodGroup: Paych
@@ -1113,11 +1209,11 @@ type Deadline struct {
 }
 
 type Partition struct {
-	AllSectors        bitfield.BitField
-	FaultySectors     bitfield.BitField
-	RecoveringSectors bitfield.BitField
-	LiveSectors       bitfield.BitField
-	ActiveSectors     bitfield.BitField
+	AllSectors        bitfield.BitField		// 所有扇区
+	FaultySectors     bitfield.BitField		// 故障扇区
+	RecoveringSectors bitfield.BitField		// 回收扇区
+	LiveSectors       bitfield.BitField		// 直播扇区
+	ActiveSectors     bitfield.BitField		// 活跃扇区
 }
 
 type Fault struct {
