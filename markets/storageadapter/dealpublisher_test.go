@@ -95,15 +95,18 @@ func TestDealPublisher(t *testing.T) {
 			dpapi := newDPAPI(t)
 
 			// Create a deal publisher
+			// 创建交易发布者
 			dp := newDealPublisher(dpapi, nil, PublishMsgConfig{
 				Period:         tc.publishPeriod,
 				MaxDealsPerMsg: tc.maxDealsPerMsg,
 			}, &api.MessageSendSpec{MaxFee: abi.NewTokenAmount(1)})
 
 			// Keep a record of the deals that were submitted to be published
+			// 记录已提交待发布的交易
 			var dealsToPublish []market.ClientDealProposal
 
 			// Publish deals within publish period
+			// 在发布期内发布交易
 			for i := 0; i < tc.dealCountWithinPublishPeriod; i++ {
 				deal := publishDeal(t, dp, false, false)
 				dealsToPublish = append(dealsToPublish, deal)
@@ -116,9 +119,11 @@ func TestDealPublisher(t *testing.T) {
 			}
 
 			// Wait until publish period has elapsed
+			// 等到发布期结束
 			time.Sleep(2 * tc.publishPeriod)
 
 			// Publish deals after publish period
+			// 在发布期后发布交易
 			for i := 0; i < tc.dealCountAfterPublishPeriod; i++ {
 				deal := publishDeal(t, dp, false, false)
 				dealsToPublish = append(dealsToPublish, deal)
@@ -133,6 +138,7 @@ func TestForcePublish(t *testing.T) {
 	dpapi := newDPAPI(t)
 
 	// Create a deal publisher
+	// 创建交易发布者
 	start := time.Now()
 	publishPeriod := time.Hour
 	dp := newDealPublisher(dpapi, nil, PublishMsgConfig{
@@ -141,21 +147,27 @@ func TestForcePublish(t *testing.T) {
 	}, &api.MessageSendSpec{MaxFee: abi.NewTokenAmount(1)})
 
 	// Queue three deals for publishing, one with a cancelled context
+	// 将三笔交易排入队列以进行发布，其中一笔交易的上下文已取消
 	var dealsToPublish []market.ClientDealProposal
 	// 1. Regular deal
+	// 1. 定期交易
 	deal := publishDeal(t, dp, false, false)
 	dealsToPublish = append(dealsToPublish, deal)
 	// 2. Deal with cancelled context
+	// 2. 处理取消的上下文
 	publishDeal(t, dp, true, false)
 	// 3. Regular deal
+	// 3. 定期交易
 	deal = publishDeal(t, dp, false, false)
 	dealsToPublish = append(dealsToPublish, deal)
 
 	// Allow a moment for them to be queued
+	// 给他们一点时间排队
 	time.Sleep(10 * time.Millisecond)
 
 	// Should be two deals in the pending deals list
 	// (deal with cancelled context is ignored)
+	// 应为待处理交易列表中的两个交易
 	pendingInfo := dp.PendingDeals()
 	require.Len(t, pendingInfo.Deals, 2)
 	require.Equal(t, publishPeriod, pendingInfo.PublishPeriod)
@@ -163,13 +175,16 @@ func TestForcePublish(t *testing.T) {
 	require.True(t, pendingInfo.PublishPeriodStart.Before(time.Now()))
 
 	// Force publish all pending deals
+	// 强制发布所有待定交易
 	dp.ForcePublishPendingDeals()
 
 	// Should be no pending deals
+	// 应该没有待处理的交易
 	pendingInfo = dp.PendingDeals()
 	require.Len(t, pendingInfo.Deals, 0)
 
 	// Make sure the expected deals were published
+	// 确保发布了预期的交易
 	checkPublishedDeals(t, dpapi, dealsToPublish, []int{2})
 }
 

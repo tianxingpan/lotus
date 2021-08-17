@@ -233,8 +233,8 @@ func (c *ClientNodeAdapter) ValidatePublishedDeal(ctx context.Context, deal stor
 }
 
 var clientOverestimation = struct {
-	numerator   int64
-	denominator int64
+	numerator   int64	// 分子
+	denominator int64	// 分母
 }{
 	numerator:   12,
 	denominator: 10,
@@ -264,12 +264,14 @@ func (c *ClientNodeAdapter) OnDealSectorCommitted(ctx context.Context, provider 
 }
 
 // TODO: Replace dealID parameter with DealProposal
+// 交易到期或削减
 func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID abi.DealID, onDealExpired storagemarket.DealExpiredCallback, onDealSlashed storagemarket.DealSlashedCallback) error {
 	head, err := c.ChainHead(ctx)
 	if err != nil {
 		return xerrors.Errorf("client: failed to get chain head: %w", err)
 	}
 
+	// 状态市场存储交易
 	sd, err := c.StateMarketStorageDeal(ctx, dealID, head.Key())
 	if err != nil {
 		return xerrors.Errorf("client: failed to look up deal %d on chain: %w", dealID, err)
@@ -345,16 +347,20 @@ func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID a
 	}
 
 	// Called when there was a chain reorg and the state change was reverted
+	// 当发生链重组并且状态更改被还原时调用
 	revert := func(ctx context.Context, ts *types.TipSet) error {
 		// TODO: Is it ok to just ignore this?
+		// TODO: 忽略这一点可以吗？
 		log.Warn("deal state reverted; TODO: actually handle this!")
 		return nil
 	}
 
 	// Watch for state changes to the deal
+	// 注意交易的状态变化
 	match := c.dsMatcher.matcher(ctx, dealID)
 
 	// Wait until after the end epoch for the deal and then timeout
+	// 等到交易结束后，然后超时
 	timeout := (sd.Proposal.EndEpoch - head.Height()) + 1
 	if err := c.ev.StateChanged(checkFunc, stateChanged, revert, int(build.MessageConfidence)+1, timeout, match); err != nil {
 		return xerrors.Errorf("failed to set up state changed handler: %w", err)
@@ -363,18 +369,22 @@ func (c *ClientNodeAdapter) OnDealExpiredOrSlashed(ctx context.Context, dealID a
 	return nil
 }
 
+// 签署提案
 func (c *ClientNodeAdapter) SignProposal(ctx context.Context, signer address.Address, proposal market2.DealProposal) (*market2.ClientDealProposal, error) {
 	// TODO: output spec signed proposal
+	// TODO: 输出规范签署的提案
 	buf, err := cborutil.Dump(&proposal)
 	if err != nil {
 		return nil, err
 	}
 
+	// 状态帐户密钥
 	signer, err = c.StateAccountKey(ctx, signer, types.EmptyTSK)
 	if err != nil {
 		return nil, err
 	}
 
+	// 钱包签名
 	sig, err := c.Wallet.WalletSign(ctx, signer, buf, api.MsgMeta{
 		Type: api.MTDealProposal,
 	})
@@ -382,17 +392,20 @@ func (c *ClientNodeAdapter) SignProposal(ctx context.Context, signer address.Add
 		return nil, err
 	}
 
+	// market2的客户端交易提议
 	return &market2.ClientDealProposal{
 		Proposal:        proposal,
 		ClientSignature: *sig,
 	}, nil
 }
 
+// 获取默认钱包地址
 func (c *ClientNodeAdapter) GetDefaultWalletAddress(ctx context.Context) (address.Address, error) {
 	addr, err := c.DefWallet.GetDefault()
 	return addr, err
 }
 
+// 获取链头
 func (c *ClientNodeAdapter) GetChainHead(ctx context.Context) (shared.TipSetToken, abi.ChainEpoch, error) {
 	head, err := c.ChainHead(ctx)
 	if err != nil {
@@ -402,6 +415,7 @@ func (c *ClientNodeAdapter) GetChainHead(ctx context.Context) (shared.TipSetToke
 	return head.Key().Bytes(), head.Height(), nil
 }
 
+// 等待消息
 func (c *ClientNodeAdapter) WaitForMessage(ctx context.Context, mcid cid.Cid, cb func(code exitcode.ExitCode, bytes []byte, finalCid cid.Cid, err error) error) error {
 	receipt, err := c.StateWaitMsg(ctx, mcid, build.MessageConfidence, api.LookbackNoLimit, true)
 	if err != nil {
@@ -410,6 +424,7 @@ func (c *ClientNodeAdapter) WaitForMessage(ctx context.Context, mcid cid.Cid, cb
 	return cb(receipt.Receipt.ExitCode, receipt.Receipt.Return, receipt.Message, nil)
 }
 
+// 获取矿工信息
 func (c *ClientNodeAdapter) GetMinerInfo(ctx context.Context, addr address.Address, encodedTs shared.TipSetToken) (*storagemarket.StorageProviderInfo, error) {
 	tsk, err := types.TipSetKeyFromBytes(encodedTs)
 	if err != nil {
@@ -424,6 +439,7 @@ func (c *ClientNodeAdapter) GetMinerInfo(ctx context.Context, addr address.Addre
 	return &out, nil
 }
 
+// 签名字节
 func (c *ClientNodeAdapter) SignBytes(ctx context.Context, signer address.Address, b []byte) (*crypto.Signature, error) {
 	signer, err := c.StateAccountKey(ctx, signer, types.EmptyTSK)
 	if err != nil {
@@ -439,4 +455,5 @@ func (c *ClientNodeAdapter) SignBytes(ctx context.Context, signer address.Addres
 	return localSignature, nil
 }
 
+// 定义了存储市场的，客户端存储节点，即为客户端节点适配器
 var _ storagemarket.StorageClientNode = &ClientNodeAdapter{}

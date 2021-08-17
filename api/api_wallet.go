@@ -15,12 +15,15 @@ const (
 	MTUnknown = "unknown"
 
 	// Signing message CID. MsgMeta.Extra contains raw cbor message bytes
+	// 签名消息 CID。 MsgMeta.Extra 包含原始 cbor 消息字节
 	MTChainMsg = "message"
 
 	// Signing a blockheader. signing raw cbor block bytes (MsgMeta.Extra is empty)
+	// 签署区块头。对原始 cbor 块字节进行签名（MsgMeta.Extra 为空）
 	MTBlock = "block"
 
 	// Signing a deal proposal. signing raw cbor proposal bytes (MsgMeta.Extra is empty)
+	// 签署交易提案。签署原始 cbor 提议字节（MsgMeta.Extra 为空）
 	MTDealProposal = "dealproposal"
 
 	// TODO: Deals, Vouchers, VRF
@@ -31,9 +34,11 @@ type MsgMeta struct {
 
 	// Additional data related to what is signed. Should be verifiable with the
 	// signed bytes (e.g. CID(Extra).Bytes() == toSign)
+	// 与签名内容相关的其他数据。应该可以使用带符号的字节进行验证（例如 CID(Extra).Bytes() == toSign）
 	Extra []byte
 }
 
+// 钱包的API定义
 type Wallet interface {
 	WalletNew(context.Context, types.KeyType) (address.Address, error) //perm:admin
 	WalletHas(context.Context, address.Address) (bool, error)          //perm:admin
