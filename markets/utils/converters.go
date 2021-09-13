@@ -11,6 +11,7 @@ import (
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
 )
 
+// 新建存储提供者信息
 func NewStorageProviderInfo(address address.Address, miner address.Address, sectorSize abi.SectorSize, peer peer.ID, addrs []abi.Multiaddrs) storagemarket.StorageProviderInfo {
 	multiaddrs := make([]multiaddr.Multiaddr, 0, len(addrs))
 	for _, a := range addrs {
@@ -21,6 +22,7 @@ func NewStorageProviderInfo(address address.Address, miner address.Address, sect
 		multiaddrs = append(multiaddrs, maddr)
 	}
 
+	// StorageProviderInfo描述有关StorageProvider的链上信息
 	return storagemarket.StorageProviderInfo{
 		Address:    address,
 		Worker:     miner,
@@ -30,6 +32,7 @@ func NewStorageProviderInfo(address address.Address, miner address.Address, sect
 	}
 }
 
+// 共享平衡
 func ToSharedBalance(bal api.MarketBalance) storagemarket.Balance {
 	return storagemarket.Balance{
 		Locked:    bal.Locked,

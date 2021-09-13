@@ -76,6 +76,8 @@ func Load(store adt.Store, act *types.Actor) (State, error) {
 	return nil, xerrors.Errorf("unknown actor code %s", act.Code)
 }
 
+// 制作状态
+// 如果参与者的版本不存在，则提示报错
 func MakeState(store adt.Store, av actors.Version) (State, error) {
 	switch av {
 
@@ -98,6 +100,7 @@ func MakeState(store adt.Store, av actors.Version) (State, error) {
 	return nil, xerrors.Errorf("unknown actor version %d", av)
 }
 
+// 获取参与者代码ID
 func GetActorCodeID(av actors.Version) (cid.Cid, error) {
 	switch av {
 
@@ -121,6 +124,7 @@ func GetActorCodeID(av actors.Version) (cid.Cid, error) {
 	return cid.Undef, xerrors.Errorf("unknown actor version %d", av)
 }
 
+// 状态
 type State interface {
 	cbor.Marshaler
 
@@ -150,14 +154,18 @@ type State interface {
 	decodeClaim(*cbg.Deferred) (Claim, error)
 }
 
+// 声明
 type Claim struct {
 	// Sum of raw byte power for a miner's sectors.
+	// 矿工扇区的原始字节功率之和。
 	RawBytePower abi.StoragePower
 
 	// Sum of quality adjusted power for a miner's sectors.
+	// 矿工行业的质量调整功率总和。
 	QualityAdjPower abi.StoragePower
 }
 
+// 增加声明
 func AddClaims(a Claim, b Claim) Claim {
 	return Claim{
 		RawBytePower:    big.Add(a.RawBytePower, b.RawBytePower),

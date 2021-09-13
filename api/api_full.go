@@ -810,10 +810,13 @@ type FileRef struct {
 
 type MinerSectors struct {
 	// Live sectors that should be proven.
+	// Live 需要证明的部门。
 	Live uint64
 	// Sectors actively contributing to power.
+	// 积极促进算力发展的部门
 	Active uint64
 	// Sectors with failed proofs.
+	// 证明失败的部门
 	Faulty uint64
 }
 
@@ -854,6 +857,7 @@ type DealInfo struct {
 	DataTransfer      *DataTransferChannel
 }
 
+// 消息查询
 type MsgLookup struct {
 	Message   cid.Cid // Can be different than requested, in case it was replaced, but only gas values changed
 	Receipt   types.MessageReceipt
@@ -862,6 +866,7 @@ type MsgLookup struct {
 	Height    abi.ChainEpoch
 }
 
+// Gas消息的价格
 type MsgGasCost struct {
 	Message            cid.Cid // Can be different than requested, in case it was replaced, but only gas values changed
 	GasUsed            abi.TokenAmount
@@ -882,11 +887,13 @@ type BlockMessages struct {
 	Cids []cid.Cid
 }
 
+// 消息
 type Message struct {
 	Cid     cid.Cid
 	Message *types.Message
 }
 
+// 参与者状态
 type ActorState struct {
 	Balance types.BigInt
 	Code    cid.Cid
@@ -906,39 +913,51 @@ type PaychStatus struct {
 	Direction   PCHDir
 }
 
+// 通道信息
 type ChannelInfo struct {
 	Channel      address.Address
 	WaitSentinel cid.Cid
 }
 
+// 渠道可用资金
 type ChannelAvailableFunds struct {
 	// Channel is the address of the channel
+	// Channel是通道的地址
 	Channel *address.Address
 	// From is the from address of the channel (channel creator)
+	// From是频道的发件人地址（频道创建者）
 	From address.Address
 	// To is the to address of the channel
+	// To 是通道的地址
 	To address.Address
 	// ConfirmedAmt is the amount of funds that have been confirmed on-chain
 	// for the channel
+	// ConfirmDamt是渠道链上已确认的资金量
 	ConfirmedAmt types.BigInt
 	// PendingAmt is the amount of funds that are pending confirmation on-chain
+	// PendingAmt是链上待确认的资金量
 	PendingAmt types.BigInt
 	// PendingWaitSentinel can be used with PaychGetWaitReady to wait for
 	// confirmation of pending funds
+	// PendingWaitSentinel可与PaychGetWaitReady一起使用，以等待待定资金的确认
 	PendingWaitSentinel *cid.Cid
 	// QueuedAmt is the amount that is queued up behind a pending request
+	// QueuedAmt是在挂起的请求后排队的数量
 	QueuedAmt types.BigInt
 	// VoucherRedeemedAmt is the amount that is redeemed by vouchers on-chain
 	// and in the local datastore
+	// VoucherReceidedAMT是指链上和本地数据存储中凭单兑换的金额
 	VoucherReedeemedAmt types.BigInt
 }
 
+// 付款信息
 type PaymentInfo struct {
 	Channel      address.Address
 	WaitSentinel cid.Cid
 	Vouchers     []*paych.SignedVoucher
 }
 
+// 凭证规格
 type VoucherSpec struct {
 	Amount      types.BigInt
 	TimeLockMin abi.ChainEpoch
@@ -949,21 +968,26 @@ type VoucherSpec struct {
 }
 
 // VoucherCreateResult is the response to calling PaychVoucherCreate
+// VoucherCreateResult 是对调用 PaychVoucherCreate 的响应
 type VoucherCreateResult struct {
 	// Voucher that was created, or nil if there was an error or if there
 	// were insufficient funds in the channel
+	// 已创建的凭证，如果出现错误或通道中资金不足，则为零
 	Voucher *paych.SignedVoucher
 	// Shortfall is the additional amount that would be needed in the channel
 	// in order to be able to create the voucher
+	// 短缺是通道中创建凭证所需的额外金额
 	Shortfall types.BigInt
 }
 
+// 矿机动力
 type MinerPower struct {
 	MinerPower  power.Claim
 	TotalPower  power.Claim
 	HasMinPower bool
 }
 
+// 查询报价
 type QueryOffer struct {
 	Err string
 
@@ -979,6 +1003,7 @@ type QueryOffer struct {
 	MinerPeer               retrievalmarket.RetrievalPeer
 }
 
+// 顺序/命令
 func (o *QueryOffer) Order(client address.Address) RetrievalOrder {
 	return RetrievalOrder{
 		Root:                    o.Root,
@@ -995,6 +1020,7 @@ func (o *QueryOffer) Order(client address.Address) RetrievalOrder {
 	}
 }
 
+// 市场供需平衡
 type MarketBalance struct {
 	Escrow big.Int
 	Locked big.Int
@@ -1006,13 +1032,15 @@ type MarketDeal struct {
 	State    market.DealState		// 交易状态
 }
 
+// 检索顺序
 type RetrievalOrder struct {
 	// TODO: make this less unixfs specific
+	// 使其不那么特定于unixfs
 	Root  cid.Cid
 	Piece *cid.Cid
 	Size  uint64
 
-	LocalStore *multistore.StoreID // if specified, get data from local store
+	LocalStore *multistore.StoreID // if specified, get data from local store， 如果指定，则从本地存储获取数据
 	// TODO: support offset
 	Total                   types.BigInt
 	UnsealPrice             types.BigInt
@@ -1033,11 +1061,13 @@ type InvocResult struct {
 	Duration       time.Duration
 }
 
+// 方法调用
 type MethodCall struct {
 	types.MessageReceipt
 	Error string
 }
 
+// 开始交易参数
 type StartDealParams struct {
 	Data               *storagemarket.DataRef
 	Wallet             address.Address
