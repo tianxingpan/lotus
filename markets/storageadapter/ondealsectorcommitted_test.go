@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// 交易扇区预提交测试
 func TestOnDealSectorPreCommitted(t *testing.T) {
 	provider := address.TestAddress
 	ctx := context.Background()
@@ -47,6 +48,7 @@ func TestOnDealSectorPreCommitted(t *testing.T) {
 		ClientCollateral:     abi.NewTokenAmount(1),
 		Label:                "success",
 	}
+	// 未完成的交易
 	unfinishedDeal := &api.MarketDeal{
 		Proposal: proposal,
 		State: market.DealState{
@@ -54,6 +56,7 @@ func TestOnDealSectorPreCommitted(t *testing.T) {
 			LastUpdatedEpoch: 2,
 		},
 	}
+	// 主动交易
 	activeDeal := &api.MarketDeal{
 		Proposal: proposal,
 		State: market.DealState{
@@ -61,6 +64,7 @@ func TestOnDealSectorPreCommitted(t *testing.T) {
 			LastUpdatedEpoch: 2,
 		},
 	}
+	// 大减价交易
 	slashedDeal := &api.MarketDeal{
 		Proposal: proposal,
 		State: market.DealState{

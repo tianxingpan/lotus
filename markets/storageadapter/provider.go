@@ -1,5 +1,7 @@
 package storageadapter
 
+// storageadapter 为存储适配器
+
 // this file implements storagemarket.StorageProviderNode
 // 这个文件实现了 storagemarket.StorageProviderNode
 

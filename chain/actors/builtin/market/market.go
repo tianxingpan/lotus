@@ -100,6 +100,7 @@ func MakeState(store adt.Store, av actors.Version) (State, error) {
 	return nil, xerrors.Errorf("unknown actor version %d", av)
 }
 
+// 获取Actor代码ID
 func GetActorCodeID(av actors.Version) (cid.Cid, error) {
 	switch av {
 
@@ -140,6 +141,7 @@ type State interface {
 	GetState() interface{}
 }
 
+// 平衡表
 type BalanceTable interface {
 	ForEach(cb func(address.Address, abi.TokenAmount) error) error
 	Get(key address.Address) (abi.TokenAmount, error)
@@ -168,12 +170,14 @@ type WithdrawBalanceParams = market0.WithdrawBalanceParams
 
 type ClientDealProposal = market0.ClientDealProposal
 
+// 交易状态
 type DealState struct {
 	SectorStartEpoch abi.ChainEpoch // -1 if not yet included in proven sector
 	LastUpdatedEpoch abi.ChainEpoch // -1 if deal state never updated
 	SlashEpoch       abi.ChainEpoch // -1 if deal never slashed
 }
 
+// 交易提案
 type DealProposal struct {
 	PieceCID             cid.Cid
 	PieceSize            abi.PaddedPieceSize
@@ -188,34 +192,40 @@ type DealProposal struct {
 	ClientCollateral     abi.TokenAmount
 }
 
+// 交易状态更改
 type DealStateChanges struct {
 	Added    []DealIDState
 	Modified []DealStateChange
 	Removed  []DealIDState
 }
 
+// 交易ID状态
 type DealIDState struct {
 	ID   abi.DealID
 	Deal DealState
 }
 
 // DealStateChange is a change in deal state from -> to
+// DealStateChange是交易状态from->to的更改
 type DealStateChange struct {
 	ID   abi.DealID
 	From *DealState
 	To   *DealState
 }
 
+// 交易提案变更
 type DealProposalChanges struct {
 	Added   []ProposalIDState
 	Removed []ProposalIDState
 }
 
+// 提案ID状态
 type ProposalIDState struct {
 	ID       abi.DealID
 	Proposal DealProposal
 }
 
+// 空交易状态
 func EmptyDealState() *DealState {
 	return &DealState{
 		SectorStartEpoch: -1,
@@ -225,6 +235,7 @@ func EmptyDealState() *DealState {
 }
 
 // returns the earned fees and pending fees for a given deal
+// 返回给定交易的已赚取费用和待定费用
 func (deal DealProposal) GetDealFees(height abi.ChainEpoch) (abi.TokenAmount, abi.TokenAmount) {
 	tf := big.Mul(deal.StoragePricePerEpoch, big.NewInt(int64(deal.EndEpoch-deal.StartEpoch)))
 

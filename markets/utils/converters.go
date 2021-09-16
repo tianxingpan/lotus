@@ -11,6 +11,8 @@ import (
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
 )
 
+// converter 转换器
+
 // 新建存储提供者信息
 func NewStorageProviderInfo(address address.Address, miner address.Address, sectorSize abi.SectorSize, peer peer.ID, addrs []abi.Multiaddrs) storagemarket.StorageProviderInfo {
 	multiaddrs := make([]multiaddr.Multiaddr, 0, len(addrs))
