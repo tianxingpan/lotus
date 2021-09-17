@@ -16,6 +16,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/vm"
 )
 
+// 绘制随机性
 func DrawRandomness(rbase []byte, pers crypto.DomainSeparationTag, round abi.ChainEpoch, entropy []byte) ([]byte, error) {
 	h := blake2b.New256()
 	if err := binary.Write(h, binary.BigEndian, int64(pers)); err != nil {

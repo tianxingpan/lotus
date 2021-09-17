@@ -311,7 +311,9 @@ type FullNode interface {
 
 	// MethodGroup: Miner
 
+	// 矿工获取基本信息
 	MinerGetBaseInfo(context.Context, address.Address, abi.ChainEpoch, types.TipSetKey) (*MiningBaseInfo, error) //perm:read
+	// 矿工创建块
 	MinerCreateBlock(context.Context, *BlockTemplate) (*types.BlockMsg, error)                                   //perm:write
 
 	// // UX ?

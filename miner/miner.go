@@ -50,6 +50,10 @@ const (
 //
 // Upon each mining loop iteration, the returned callback is called reporting
 // whether we mined a block in this round or not.
+//
+// waitFunc预计将以配置的网络速率进行块挖掘。
+// baseTime是挖掘基地的时间戳，即我们计划在其上构建的tipset的时间戳。
+// 在每次挖掘循环迭代时，调用返回的回调，报告我们是否在这一轮中挖掘了块。
 type waitFunc func(ctx context.Context, baseTime uint64) (func(bool, abi.ChainEpoch, error), abi.ChainEpoch, error)
 
 // 随机时间偏移
@@ -86,6 +90,9 @@ func NewMiner(api v1api.FullNode, epp gen.WinningPoStProver, addr address.Addres
 			// the result is that we WILL NOT wait, therefore fast-forwarding
 			// and thus healing the chain by backfilling it with null rounds
 			// rapidly.
+			// 等待一半的时间，以防其他父母进来
+			// 如果我们过去通过追赶/匆忙挖掘来挖掘一个区块，例如从网络中断中恢复时，此睡眠将持续负数，因此**将立即返回**。
+			// 结果是我们不会等待，因此快速转发并通过快速回填空轮来治愈链。
 			deadline := baseTime + build.PropagationDelaySecs
 			baseT := time.Unix(int64(deadline), 0)
 
@@ -108,6 +115,8 @@ func NewMiner(api v1api.FullNode, epp gen.WinningPoStProver, addr address.Addres
 // Miner encapsulates the mining processes of the system.
 //
 // Refer to the godocs on mineOne and mine methods for more detail.
+// Miner 封装了系统的挖矿过程。
+// 有关更多详细信息，请参阅mineOne和mine方法上的godocs。
 type Miner struct {
 	api v1api.FullNode
 
@@ -121,12 +130,15 @@ type Miner struct {
 	waitFunc waitFunc
 
 	// lastWork holds the last MiningBase we built upon.
+	// lastWork 保存了我们构建的最后一个 MiningBase。
 	lastWork *MiningBase
 
 	sf *slashfilter.SlashFilter
 	// minedBlockHeights is a safeguard that caches the last heights we mined.
 	// It is consulted before publishing a newly mined block, for a sanity check
 	// intended to avoid slashings in case of a bug.
+	// minedBlockHeights是一种保护措施，可以隐藏我们最后挖掘的高地。
+	// 在发布新开采的区块之前咨询它，以进行完整性检查，以避免出现错误时的削减。
 	minedBlockHeights *lru.ARCCache
 
 	evtTypes [1]journal.EventType
@@ -451,6 +463,7 @@ func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *type
 	round := base.TipSet.Height() + base.NullRounds + 1
 
 	// always write out a log
+	// 总是写出日志
 	var winner *types.ElectionProof
 	var mbi *api.MiningBaseInfo
 	var rbase types.BeaconEntry
@@ -461,14 +474,16 @@ func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *type
 		// mbi can be nil if we are deep in penalty and there are 0 eligible sectors
 		// in the current deadline. If this case - put together a dummy one for reporting
 		// https://github.com/filecoin-project/lotus/blob/v1.9.0/chain/stmgr/utils.go#L500-L502
+		// 如果我们受到严重惩罚并且在当前截止日期内有 0 个符合条件的部门，则 mbi 可以为零。如果是这种情况 - 将一个虚拟的放在一起进行报告
 		if mbi == nil {
 			mbi = &api.MiningBaseInfo{
-				NetworkPower:      big.NewInt(-1), // we do not know how big the network is at this point
+				NetworkPower:      big.NewInt(-1), // we do not know how big the network is at this point  我们不知道此时网络有多大
 				EligibleForMining: false,
-				MinerPower:        big.NewInt(0), // but we do know we do not have anything eligible
+				MinerPower:        big.NewInt(0), // but we do know we do not have anything eligible  但我们知道我们没有任何资格
 			}
 
 			// try to opportunistically pull actual power and plug it into the fake mbi
+			// 尝试机会性地拉动实际算力并将其插入假 mbi
 			if pow, err := m.api.StateMinerPower(ctx, m.address, base.TipSet.Key()); err == nil && pow != nil {
 				hasMinPower = pow.HasMinPower
 				mbi.MinerPower = pow.MinerPower.QualityAdjPower
@@ -514,6 +529,7 @@ func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *type
 
 	if !mbi.EligibleForMining {
 		// slashed or just have no power yet
+		// 被消减或者只是没有算力了
 		return nil, nil
 	}
 
@@ -568,6 +584,7 @@ func (m *Miner) mineOne(ctx context.Context, base *MiningBase) (minedBlock *type
 	tProof := build.Clock.Now()
 
 	// get pending messages early,
+	// 尽早获取挂起的消息，
 	msgs, err := m.api.MpoolSelect(context.TODO(), base.TipSet.Key(), ticket.Quality())
 	if err != nil {
 		err = xerrors.Errorf("failed to select messages for block: %w", err)
@@ -638,6 +655,7 @@ func (m *Miner) createBlock(base *MiningBase, addr address.Address, ticket *type
 	nheight := base.TipSet.Height() + base.NullRounds + 1
 
 	// why even return this? that api call could just submit it for us
+	// 为什么还要还这个？那个api调用可以为我们提交它
 	return m.api.MinerCreateBlock(context.TODO(), &api.BlockTemplate{
 		Miner:            addr,
 		Parents:          base.TipSet.Key(),

@@ -637,6 +637,7 @@ func (wpp *wppProvider) ComputeProof(context.Context, []proof5.SectorInfo, abi.P
 	return ValidWpostForTesting, nil
 }
 
+// 是否是本轮获胜者
 func IsRoundWinner(ctx context.Context, ts *types.TipSet, round abi.ChainEpoch,
 	miner address.Address, brand types.BeaconEntry, mbi *api.MiningBaseInfo, a MiningCheckAPI) (*types.ElectionProof, error) {
 
