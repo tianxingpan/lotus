@@ -50,6 +50,7 @@ var log = logging.Logger("builder")
 
 // special is a type used to give keys to modules which
 //  can't really be identified by the returned type
+// special 是一种用于为模块提供键的类型，这些模块实际上不能由返回的类型识别
 type special struct{ id int }
 
 //nolint:golint
@@ -71,13 +72,16 @@ var (
 type invoke int
 
 // Invokes are called in the order they are defined.
+// 调用按定义的顺序调用。
 //nolint:golint
 const (
 	// InitJournal at position 0 initializes the journal global var as soon as
 	// the system starts, so that it's available for all other components.
+	// 位置 0 处的 InitJournal 会在系统启动后立即初始化日志全局变量，以便它可用于所有其他组件。
 	InitJournalKey = invoke(iota)
 
 	// System processes.
+	// 系统进程。
 	InitMemoryWatchdog
 
 	// libp2p
